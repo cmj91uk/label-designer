@@ -1,7 +1,8 @@
 import jsPDF, { jsPDFOptions } from "jspdf"
 import { ILabelFormat } from "./label";
+import { ILabelSpec } from "./label-spec";
 
-export const buildPdf = (format: ILabelFormat, date: Date, labelText: string, images: string[], imageWidth: number) => {
+export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
     // Default export is a4 paper, portrait, using millimeters for units
     // Label 24 per sheet = 63.5 x 33.9 mm
     // A4 = 297mm * 210mm
@@ -28,6 +29,8 @@ export const buildPdf = (format: ILabelFormat, date: Date, labelText: string, im
 
     const { width, height, horizontalPitch, verticalPitch, leftMargin, topMargin, countX, countY } = format;
 
+    const { date, images, objective } = labelSpec;
+
     const margin = 3;
 
     let textMaxWidth = width - (2 * margin);
@@ -49,10 +52,10 @@ export const buildPdf = (format: ILabelFormat, date: Date, labelText: string, im
             doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
             
             const dateFormatter = new Intl.DateTimeFormat('en-GB');
-            // doc.text(dateFormatter.format(date), labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
-            //doc.text(`LO: ${labelText}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
-            doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
-            doc.text(`End X: ${labelStartX + width}, End Y: ${labelStartY + height}`, labelStartX + margin, labelStartY + margin + 14, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
+            doc.text(dateFormatter.format(date), labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
+            doc.text(`LO: ${objective}`, labelStartX + margin, labelStartY + margin + 7, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
+            // doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
+            // doc.text(`End X: ${labelStartX + width}, End Y: ${labelStartY + height}`, labelStartX + margin, labelStartY + margin + 14, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
 
             if (images.length)
             {

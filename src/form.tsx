@@ -2,6 +2,7 @@ import { useForm, SubmitHandler } from 'react-hook-form';
 import { buildPdf } from './pdf-builder';
 import { FingerSpace, Formation, FullStop, Punctuation } from './icons';
 import { EightPerSheet, ILabelFormat, TwentyFourPerSheet } from './label';
+import { ILabelSpec } from './label-spec';
 
 interface LessonForm {
     date: Date,
@@ -47,7 +48,13 @@ export const Form = () => {
                 break;
         }
 
-        buildPdf(format, new Date(data.date), data.label, images, 10);
+        const labelSpec: ILabelSpec = {
+            date: new Date(data.date),
+            objective: data.label,
+            images,
+        }
+
+        buildPdf(format, labelSpec);
     }
 
     return (
