@@ -30,6 +30,31 @@ div.checkboxes {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+.text-section {
+  display: flex;
+}
+
+.text-section> :first-child {
+  margin-right: 10px
+}
+
+.label-sizing {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+
+.label-sizing-options {
+  flex: 1;
+  display: flex;
+  justify-content: space-evenly;
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);

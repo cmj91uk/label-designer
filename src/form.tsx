@@ -19,7 +19,7 @@ export const Form = () => {
     const { register, handleSubmit } = useForm<LessonForm>({
         defaultValues: {
             date: new Date(),
-            labelFormat: 'eight'
+            labelFormat: 'twentyfour'
         }
     });
 
@@ -60,18 +60,24 @@ export const Form = () => {
     return (
         <div>
             <form onSubmit={handleSubmit(submit)}>
-                <input type="date" {...register('date')} />
-                <input type="text" {...register('label')} />
 
-                <div>
-                    <label>
-                        Eight
-                        <input type='radio' value='eight' {...register('labelFormat')} />
-                    </label>
-                    <label>
-                        Twenty Four
-                        <input type='radio' value='twentyfour' {...register('labelFormat')} />
-                    </label>
+                <div className='label-sizing'>
+                    Labels Per Page
+                    <div className='label-sizing-options'>
+                        <label>
+                            Eight
+                            <input type='radio' value='eight' {...register('labelFormat')} />
+                        </label>
+                        <label>
+                            Twenty Four
+                            <input type='radio' value='twentyfour' {...register('labelFormat')} />
+                        </label>
+                    </div>
+                </div>
+
+                <div className='text-section'>
+                    <input type="date" defaultValue={'23/09/2024'} {...register('date')} />
+                    <input type="text" placeholder="Lesson Objective" {...register('label')} />
                 </div>
 
                 <div className='checkboxes'>
