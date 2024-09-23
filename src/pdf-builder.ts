@@ -46,10 +46,10 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
             const labelStartY = (verticalPitch * i) + topMargin;
 
             // Draw Outer Rectangle
-            const stroke = 'S';
-            const rectRadius = 5;
+            // const stroke = 'S';
+            // const rectRadius = 5;
             // Slightly inset rounded rectangle
-            doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
+            // doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
             
             const dateFormatter = new Intl.DateTimeFormat('en-GB');
             doc.text(dateFormatter.format(date), labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
