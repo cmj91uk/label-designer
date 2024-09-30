@@ -80,6 +80,6 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
         }
     }
 
-    doc.save(`${objective}.pdf`);
+    doc.save(`${dateFormatter.format(date)}_${objective}.pdf`);
 
 }
