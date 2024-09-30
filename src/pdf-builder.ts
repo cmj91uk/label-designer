@@ -80,6 +80,6 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
         }
     }
 
-    doc.save('24persheet.pdf');
+    doc.save(`${objective}.pdf`);
 
 }
