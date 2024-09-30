@@ -33,6 +33,8 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
 
     const margin = 3;
 
+    const dateFormatter = new Intl.DateTimeFormat('en-GB');
+
     let textMaxWidth = width - (2 * margin);
     if (images.length) {
         textMaxWidth = textMaxWidth - imageWidth - margin;
@@ -51,7 +53,6 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
             // Slightly inset rounded rectangle
             // doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
             
-            const dateFormatter = new Intl.DateTimeFormat('en-GB');
             doc.text(dateFormatter.format(date), labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
             doc.text(`LO: ${objective}`, labelStartX + margin, labelStartY + margin + 7, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
             // doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
