@@ -1,8 +1,9 @@
 import jsPDF, { jsPDFOptions } from "jspdf"
 import { ILabelFormat } from "./label";
 import { ILabelSpec } from "./label-spec";
+import { formatDate } from './dateFormatter';
 
-export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
+export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
     // Default export is a4 paper, portrait, using millimeters for units
     // Label 24 per sheet = 63.5 x 33.9 mm
     // A4 = 297mm * 210mm
@@ -29,11 +30,9 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
 
     const { width, height, horizontalPitch, verticalPitch, leftMargin, topMargin, countX, countY } = format;
 
-    const { date, images, objective } = labelSpec;
+    const { date, images, objective, dateFormat } = labelSpec;
 
     const margin = 3;
-
-    const dateFormatter = new Intl.DateTimeFormat('en-GB');
 
     let textMaxWidth = width - (2 * margin);
     if (images.length) {
@@ -48,13 +47,19 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
             const labelStartY = (verticalPitch * i) + topMargin;
 
             // Draw Outer Rectangle
-            // const stroke = 'S';
-            // const rectRadius = 5;
+            const stroke = 'S';
+            const rectRadius = 5;
             // Slightly inset rounded rectangle
-            // doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
+            doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
+
+            const hasDate = date != null;
+
+            const dateTextToDisplay = hasDate ? formatDate(dateFormat, date!) : "";
+
+            const verticalOffset = dateFormat == 'long' ? 14 : 7;
             
-            doc.text(dateFormatter.format(date), labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
-            doc.text(`LO: ${objective}`, labelStartX + margin, labelStartY + margin + 7, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
+            doc.text(dateTextToDisplay, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
+            doc.text(`LO: ${objective}`, labelStartX + margin, labelStartY + margin + verticalOffset, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
             // doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
             // doc.text(`End X: ${labelStartX + width}, End Y: ${labelStartY + height}`, labelStartX + margin, labelStartY + margin + 14, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
 
@@ -67,8 +72,9 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
 
                 const imageX = labelStartX + margin + textMaxWidth + margin;
 
-                images.forEach((img, index) => {
+                images.forEach(async (img, index) => {
                     const imageStartY = labelStartY + ((index + 1) * imageMargins) + (imageWidth * (index));
+
                     doc.addImage(img, 'PNG', imageX, imageStartY, imageWidth, imageWidth);
                 });
             }
@@ -81,6 +87,7 @@ export const buildPdf = (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth
         }
     }
 
-    doc.save(`${dateFormatter.format(date)}_${objective}.pdf`);
+    const shortFormatter = new Intl.DateTimeFormat('en-GB');
+    doc.save(`${shortFormatter.format(date)}_${objective}.pdf`);
 
 }

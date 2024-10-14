@@ -3,23 +3,31 @@ import { buildPdf } from './pdf-builder';
 import { FingerSpace, Formation, FullStop, Punctuation } from './icons';
 import { EightPerSheet, ILabelFormat, TwentyFourPerSheet } from './label';
 import { ILabelSpec } from './label-spec';
+import { formatDate } from './dateFormatter';
 
 interface LessonForm {
-    date: Date,
+    date?: Date,
     label: string,
     finger: boolean,
     formation: boolean,
     fullstop: boolean,
     punctuation: boolean,
-    labelFormat: 'eight' | 'twentyfour'
+    labelFormat: 'eight' | 'twentyfour',
+    dateFormat: 'long' | 'short'
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isValidDate = (d: any) => {
+    return d instanceof Date && !isNaN(d.valueOf());
 }
 
 export const Form = () => {
 
     const { register, handleSubmit } = useForm<LessonForm>({
         defaultValues: {
-            date: new Date(),
-            labelFormat: 'twentyfour'
+            labelFormat: 'twentyfour',
+            dateFormat: 'long'
         }
     });
 
@@ -49,13 +57,17 @@ export const Form = () => {
         }
 
         const labelSpec: ILabelSpec = {
-            date: new Date(data.date),
+            date: isValidDate(data.date) ? data.date : undefined,
             objective: data.label,
             images,
+            dateFormat: data.dateFormat,
         }
 
         buildPdf(format, labelSpec);
     }
+
+    const longFormat = formatDate('long', new Date());
+    const shortFormat = formatDate('short', new Date());
 
     return (
         <div>
@@ -75,8 +87,22 @@ export const Form = () => {
                     </div>
                 </div>
 
+                <div className='label-sizing'>
+                    Date Format
+                    <div className='label-sizing-options'>
+                        <label>
+                            Long ({longFormat})
+                            <input type='radio' value='long' {...register('dateFormat')} />
+                        </label>
+                        <label>
+                            Short ({shortFormat})
+                            <input type='radio' value='short' {...register('dateFormat')} />
+                        </label>
+                    </div>
+                </div>
+
                 <div className='text-section'>
-                    <input type="date" defaultValue={'23/09/2024'} {...register('date')} />
+                    <input type="date" defaultValue={'23/09/2024'} {...register('date', { valueAsDate: true })} />
                     <input type="text" placeholder="Lesson Objective" {...register('label')} />
                 </div>
 

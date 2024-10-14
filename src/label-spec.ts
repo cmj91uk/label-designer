@@ -1,5 +1,6 @@
 export interface ILabelSpec {
-    date: Date,
+    date: Date | undefined,
     objective: string,
-    images: string[]
+    images: string[],
+    dateFormat: 'long' | 'short'
 }
