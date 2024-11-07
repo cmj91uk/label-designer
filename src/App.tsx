@@ -1,9 +1,10 @@
 // import { ChangeEventHandler, useState } from 'react'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
-import './App.css'
+// import './App.css'
 // import { buildPdf } from './pdf-builder';
 import { Form } from './form';
+import './app.scss'
 
 function App() {
 

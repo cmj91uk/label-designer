@@ -77,86 +77,117 @@ export const Form = () => {
     const shortFormat = formatDate('short', new Date());
 
     return (
-        <div>
+        <div className='label-app'>
             <form onSubmit={handleSubmit(submit)}>
 
                 <div className='label-sizing'>
-                    Labels Per Page
+                    <div className='is-size-4'>
+                        Labels Per Page
+                    </div>
                     <div className='label-sizing-options'>
-                        <label>
-                            Eight
+                        <label className='radio'>
                             <input type='radio' value='eight' {...register('labelFormat')} />
+                            Eight
                         </label>
-                        <label>
-                            Twenty Four
+                        <label className='radio'>
                             <input type='radio' value='twentyfour' {...register('labelFormat')} />
+                            Twenty Four
                         </label>
-                        <label>
-                            Sixty Five
+                        <label className='radio'>
                             <input type='radio' value='sixtyfive' {...register('labelFormat')} />
+                            Sixty Five
                         </label>
                     </div>
                 </div>
 
+                <hr />
+
                 <div className='label-sizing'>
-                    <div>
-                        Show Date? <input type="checkbox" {...register('showDate')} />
+                    <div className='is-size-4'>
+                        Dates
+                    </div>
+                    <div className='show-date-picker'>
+                        <label className='checkbox'>
+                            <input type="checkbox" {...register('showDate')} />
+                            Show Date?
+                        </label>
                     </div>
                     {showDate ?
                         (
                             <>
-                                <span>Date Format</span>
-                                <div className='label-sizing-options'>
-                                    <label>
-                                        Long ({longFormat})
+                                <span className='is-size-4'>Date Format</span>
+                                <div className='control label-sizing-options'>
+                                    <label className='radio'>
                                         <input type='radio' value='long' {...register('dateFormat')} />
+                                        Long ({longFormat})
                                     </label>
-                                    <label>
-                                        Short ({shortFormat})
+                                    <label className='radio'>
                                         <input type='radio' value='short' {...register('dateFormat')} />
+                                        Short ({shortFormat})
                                     </label>
                                 </div>
                             </>
                         ) : null}
+                    {showDate ? (
+                        <div>
+                            <div className='is-size-4'>
+                                Label Date
+                            </div>
+                            <div>
+                                <input className='input' type="date" defaultValue={'23/09/2024'} {...register('date', { valueAsDate: true })} />
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
 
+                <hr />
                 <div className='text-section'>
-                    {showDate ? (<input type="date" defaultValue={'23/09/2024'} {...register('date', { valueAsDate: true })} />) : null}
-                    <input type="text" placeholder="Lesson Objective" {...register('label')} />
+                    <div className='is-size-4'>
+                        Lesson Objective
+                    </div>
+                    <input className='input' type="text" placeholder="Lesson Objective" {...register('label')} />
                 </div>
 
-                <div className='checkboxes'>
-                    <div>
-                        <label className='form-control'>
-                            Finger Spaces
-                            <input type="checkbox" {...register('finger')} />
-                        </label>
-                    </div>
+                <hr />
 
-                    <div>
-                        <label className='form-control'>
-                            Full Stop
-                            <input type="checkbox" {...register('fullstop')} />
-                        </label>
+                <div>
+                    <div className='is-size-4'>
+                        Icons
                     </div>
+                    <div className='checkboxes'>
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('finger')} />
+                                Finger Spaces
+                            </label>
+                        </div>
 
-                    <div>
-                        <label className='form-control'>
-                            Letter Formation
-                            <input type="checkbox" {...register('formation')} />
-                        </label>
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('fullstop')} />
+                                Full Stop
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('formation')} />
+                                Letter Formation
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('punctuation')} />
+                                Punctuation
+                            </label>
+                        </div>
                     </div>
-
-                    <div>
-                        <label className='form-control'>
-                            Punctuation
-                            <input type="checkbox" {...register('punctuation')} />
-                        </label>
-                    </div>
-
                 </div>
 
-                <button type="submit">Download</button>
+                <hr />
+
+                <button className='button is-primary' type="submit">Download</button>
             </form>
         </div>
     );
