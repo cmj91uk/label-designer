@@ -3,6 +3,7 @@
   /* margin: 0 auto; */
   padding: 2rem;
   text-align: center;
+  width: 80vw;
 }
 
 form {
@@ -44,9 +45,9 @@ form {
 }
 
 .label-sizing {
-  display: flex;
-  width: 100%;
-  justify-content: space-around;
+  /* display: flex; */
+  /* width: 100%; */
+  /* justify-content: space-around; */
 }
 
 .label-sizing-options {

@@ -6,6 +6,7 @@ import { ILabelSpec } from './label-spec';
 import { formatDate } from './dateFormatter';
 
 interface LessonForm {
+    showDate: boolean,
     date?: Date,
     label: string,
     finger: boolean,
@@ -24,12 +25,15 @@ const isValidDate = (d: any) => {
 
 export const Form = () => {
 
-    const { register, handleSubmit } = useForm<LessonForm>({
+    const { register, handleSubmit, watch } = useForm<LessonForm>({
         defaultValues: {
+            showDate: true,
             labelFormat: 'twentyfour',
             dateFormat: 'long'
         }
     });
+
+    const showDate = watch('showDate');
 
     const submit: SubmitHandler<LessonForm> = (data) => {
         const images: string[] = [];
@@ -57,7 +61,7 @@ export const Form = () => {
         }
 
         const labelSpec: ILabelSpec = {
-            date: isValidDate(data.date) ? data.date : undefined,
+            date: showDate && isValidDate(data.date) ? data.date : undefined,
             objective: data.label,
             images,
             dateFormat: data.dateFormat,
@@ -88,21 +92,29 @@ export const Form = () => {
                 </div>
 
                 <div className='label-sizing'>
-                    Date Format
-                    <div className='label-sizing-options'>
-                        <label>
-                            Long ({longFormat})
-                            <input type='radio' value='long' {...register('dateFormat')} />
-                        </label>
-                        <label>
-                            Short ({shortFormat})
-                            <input type='radio' value='short' {...register('dateFormat')} />
-                        </label>
+                    <div>
+                        Show Date? <input type="checkbox" {...register('showDate')} />
                     </div>
+                    {showDate ?
+                        (
+                            <>
+                                <span>Date Format</span>
+                                <div className='label-sizing-options'>
+                                    <label>
+                                        Long ({longFormat})
+                                        <input type='radio' value='long' {...register('dateFormat')} />
+                                    </label>
+                                    <label>
+                                        Short ({shortFormat})
+                                        <input type='radio' value='short' {...register('dateFormat')} />
+                                    </label>
+                                </div>
+                            </>
+                        ) : null}
                 </div>
 
                 <div className='text-section'>
-                    <input type="date" defaultValue={'23/09/2024'} {...register('date', { valueAsDate: true })} />
+                    {showDate ? (<input type="date" defaultValue={'23/09/2024'} {...register('date', { valueAsDate: true })} />) : null}
                     <input type="text" placeholder="Lesson Objective" {...register('label')} />
                 </div>
 
