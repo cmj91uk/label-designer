@@ -1,3 +1,9 @@
+declare global {
+    interface Window {
+        DEBUG: string
+    }
+}
+
 import jsPDF, { jsPDFOptions } from "jspdf"
 import { ILabelFormat } from "./label";
 import { ILabelSpec } from "./label-spec";
@@ -46,11 +52,13 @@ export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imag
             const labelStartX = (horizontalPitch * j) + leftMargin;
             const labelStartY = (verticalPitch * i) + topMargin;
 
-            // Draw Outer Rectangle
-            const stroke = 'S';
-            const rectRadius = 5;
-            // Slightly inset rounded rectangle
-            doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
+            if (window["DEBUG"] === 'true') {
+                // Draw Outer Rectangle
+                const stroke = 'S';
+                const rectRadius = 5;
+                // Slightly inset rounded rectangle
+                doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
+            }
 
             const hasDate = date != null;
 
