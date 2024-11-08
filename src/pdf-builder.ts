@@ -35,8 +35,8 @@ const buildLabel = async (doc: jsPDF, labelSpec: ILabelSpec, top: number, left: 
     drawOuterBox(doc, top, left, width, height);
 
     const margin = 3;
-    let usableWidth = width - (2 * margin);
-    let usableHeight = height - (2 * margin);
+    const usableWidth = width - (2 * margin);
+    const usableHeight = height - (2 * margin);
 
     const hasDate = labelSpec.date != null;
     const date = hasDate ? formatDate(labelSpec.dateFormat, labelSpec.date!) : "";
