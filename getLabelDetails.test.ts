@@ -1,4 +1,4 @@
-import { getLabelDetails } from './src/pdf-builder';
+import { getLabelDetails } from './src/getLabelDetails';
 import { describe, expect, it } from '@jest/globals';
 import { EightPerSheet } from './src/label';
 

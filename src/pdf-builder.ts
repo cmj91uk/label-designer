@@ -1,13 +1,14 @@
+import jsPDF, { jsPDFOptions } from "jspdf"
+import { ILabelFormat } from "./label";
+import { ILabelSpec } from "./label-spec";
+import { formatDate } from './dateFormatter';
+import { getLabelDetails } from './getLabelDetails.ts';
+
 declare global {
     interface Window {
         DEBUG: string
     }
 }
-
-import jsPDF, { jsPDFOptions } from "jspdf"
-import { ILabelFormat } from "./label";
-import { ILabelSpec } from "./label-spec";
-import { formatDate } from './dateFormatter';
 
 const buildLabel = async (labelSpec: ILabelSpec, top: number, left: number, width: number, height: number) => {
 
@@ -18,17 +19,7 @@ const buildLabel = async (labelSpec: ILabelSpec, top: number, left: number, widt
         resolve();
     })
 }
-export const getLabelDetails: (format: ILabelFormat, x: number, y: number) => { top: number, left:number, width: number, height: number } = (format, x, y) => {
-    const left = (x * format.horizontalPitch) + format.leftMargin;
-    const top = (y * format.verticalPitch) + format.topMargin;
 
-    return {
-        top,
-        left,
-        width: format.width,
-        height: format.height,
-    }
-}
 
 const buildPdfNew = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number) => {
 
@@ -45,7 +36,7 @@ const buildPdfNew = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWid
 }
 
 export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
-    if (window.DEBUG) {
+    if ((window as Window).DEBUG) {
         return buildPdfNew(format, labelSpec, imageWidth);
     } else {
         return buildPdfOld(format, labelSpec, imageWidth);
@@ -96,7 +87,7 @@ const buildPdfOld = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWid
             const labelStartX = (horizontalPitch * j) + leftMargin;
             const labelStartY = (verticalPitch * i) + topMargin;
 
-            if (window["DEBUG"] === 'true') {
+            if (window.DEBUG === 'true') {
                 // Draw Outer Rectangle
                 const stroke = 'S';
                 const rectRadius = 5;
@@ -124,7 +115,7 @@ const buildPdfOld = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWid
 
                 const imageX = labelStartX + margin + textMaxWidth + margin;
 
-                images.forEach(async (img, index) => {
+                images.forEach((img, index) => {
                     const imageStartY = labelStartY + ((index + 1) * imageMargins) + (imageWidth * (index));
 
                     doc.addImage(img, 'PNG', imageX, imageStartY, imageWidth, imageWidth);
