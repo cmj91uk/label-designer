@@ -9,7 +9,51 @@ import { ILabelFormat } from "./label";
 import { ILabelSpec } from "./label-spec";
 import { formatDate } from './dateFormatter';
 
+const buildLabel = async (labelSpec: ILabelSpec, top: number, left: number, width: number, height: number) => {
+
+    console.log(labelSpec);
+    console.log(top, left, width, height);
+
+    return new Promise<void>((resolve) => {
+        resolve();
+    })
+}
+export const getLabelDetails: (format: ILabelFormat, x: number, y: number) => { top: number, left:number, width: number, height: number } = (format, x, y) => {
+    const left = (x * format.horizontalPitch) + format.leftMargin;
+    const top = (y * format.verticalPitch) + format.topMargin;
+
+    return {
+        top,
+        left,
+        width: format.width,
+        height: format.height,
+    }
+}
+
+const buildPdfNew = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number) => {
+
+    console.log(labelSpec);
+    console.log(imageWidth);
+    const { countX, countY } = format;
+    for (let x = 0; x < countX; x++) {
+        for (let y = 0; y < countY; y++) {
+            const { top, left, width, height } = getLabelDetails(format, x, y);
+            await buildLabel(labelSpec, top, left, width, height);
+        }
+    }
+
+}
+
 export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
+    if (window.DEBUG) {
+        return buildPdfNew(format, labelSpec, imageWidth);
+    } else {
+        return buildPdfOld(format, labelSpec, imageWidth);
+    }
+
+}
+
+const buildPdfOld = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
     // Default export is a4 paper, portrait, using millimeters for units
     // Label 24 per sheet = 63.5 x 33.9 mm
     // A4 = 297mm * 210mm
@@ -44,7 +88,7 @@ export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imag
     if (images.length) {
         textMaxWidth = textMaxWidth - imageWidth - margin;
     }
-    
+
     for (let i = 0; i < countY; i++)
     {
         for (let j = 0; j < countX; j++)
@@ -65,7 +109,7 @@ export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imag
             const dateTextToDisplay = hasDate ? formatDate(dateFormat, date!) : "";
 
             const verticalOffset = dateFormat == 'long' ? 14 : 7;
-            
+
             doc.text(dateTextToDisplay, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
             doc.text(`LO: ${objective}`, labelStartX + margin, labelStartY + margin + verticalOffset, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
             // doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
