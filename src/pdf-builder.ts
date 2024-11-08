@@ -12,7 +12,6 @@ declare global {
 
 const drawOuterBox: (doc: jsPDF, top: number, left: number, width: number, height: number) => void =
     (doc, top, left, width, height) => {
-    debugger;
         if (window.DEBUG === 'true') {
             // Draw Outer Rectangle
             const stroke = 'S';
