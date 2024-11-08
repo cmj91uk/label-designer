@@ -10,18 +10,52 @@ declare global {
     }
 }
 
-const buildLabel = async (labelSpec: ILabelSpec, top: number, left: number, width: number, height: number) => {
+const drawOuterBox: (doc: jsPDF, top: number, left: number, width: number, height: number) => void =
+    (doc, top, left, width, height) => {
+    debugger;
+        if (window.DEBUG === 'true') {
+            // Draw Outer Rectangle
+            const stroke = 'S';
+            const rectRadius = 5;
+            // Slightly inset rounded rectangle
+            doc.roundedRect(left, top, width, height, rectRadius, rectRadius, stroke);
+        }
+    }
 
-    console.log(labelSpec);
-    console.log(top, left, width, height);
+const addLessonObjective: (doc: jsPDF, top: number, left: number, width: number, height: number, objective: string) => void =
+    (doc, top, left, _, width, objective) => {
+        doc.text(`LO: ${objective}`, left, top, { maxWidth: width, align: 'left', baseline: 'top' })
+    }
 
-    return new Promise<void>((resolve) => {
-        resolve();
-    })
+const addDate: (doc: jsPDF, top: number, left: number, width: number, height: number, date: string) => void =
+    (_, top, left, width, height, date) => {
+        console.log(top, left, width, height, date);
+    }
+
+const buildLabel = async (doc: jsPDF, labelSpec: ILabelSpec, top: number, left: number, width: number, height: number) => {
+    drawOuterBox(doc, top, left, width, height);
+
+    const margin = 3;
+    let usableWidth = width - (2 * margin);
+    let usableHeight = height - (2 * margin);
+
+    const hasDate = labelSpec.date != null;
+    const date = hasDate ? formatDate(labelSpec.dateFormat, labelSpec.date!) : "";
+    addDate(doc, top + margin, left + margin, usableWidth, usableHeight, date)
+
+    addLessonObjective(doc, top + margin, left + margin, usableWidth, usableHeight, labelSpec.objective);
 }
 
 
 const buildPdfNew = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number) => {
+
+    const options: jsPDFOptions = {
+        format: 'a4',
+        orientation: 'p',
+        unit: 'mm',
+    }
+    const doc = new jsPDF(options);
+    doc.setFontSize(14);
 
     console.log(labelSpec);
     console.log(imageWidth);
@@ -29,9 +63,11 @@ const buildPdfNew = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWid
     for (let x = 0; x < countX; x++) {
         for (let y = 0; y < countY; y++) {
             const { top, left, width, height } = getLabelDetails(format, x, y);
-            await buildLabel(labelSpec, top, left, width, height);
+            await buildLabel(doc, labelSpec, top, left, width, height);
         }
     }
+
+    return doc.save(`${labelSpec.objective}.pdf`);
 
 }
 
