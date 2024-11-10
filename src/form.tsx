@@ -1,11 +1,12 @@
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { buildPdf } from './pdf-builder';
-import { FingerSpace, Formation, FullStop, Punctuation } from './icons';
+import { FingerSpace, Formation, FullStop, Punctuation, GreatIdeas, Capital, PencilGrip, PhonicsSkills } from './icons';
 import { EightPerSheet, ILabelFormat, SixtyFivePerSheet, TwentyFourPerSheet } from './label';
 import { ILabelSpec } from './label-spec';
 import { formatDate } from './dateFormatter';
 
 interface LessonForm {
+    useNewLabels: boolean,
     showDate: boolean,
     date?: Date,
     label: string,
@@ -13,6 +14,10 @@ interface LessonForm {
     formation: boolean,
     fullstop: boolean,
     punctuation: boolean,
+    greatIdeas: boolean,
+    pencilGrip: boolean,
+    capitals: boolean,
+    phonicsSkills: boolean,
     labelFormat: 'eight' | 'twentyfour' | 'sixtyfive',
     dateFormat: 'long' | 'short'
 }
@@ -29,7 +34,8 @@ export const Form = () => {
         defaultValues: {
             showDate: true,
             labelFormat: 'twentyfour',
-            dateFormat: 'long'
+            dateFormat: 'long',
+            useNewLabels: true
         }
     });
 
@@ -50,6 +56,22 @@ export const Form = () => {
             images.push(Punctuation);
         }
 
+        if (data.capitals) {
+            images.push(Capital);
+        }
+
+        if (data.pencilGrip) {
+            images.push(PencilGrip);
+        }
+
+        if (data.greatIdeas) {
+            images.push(GreatIdeas);
+        }
+
+        if (data.phonicsSkills) {
+            images.push(PhonicsSkills);
+        }
+
         let format: ILabelFormat = TwentyFourPerSheet;
         switch (data.labelFormat) {
             case 'eight':
@@ -64,6 +86,7 @@ export const Form = () => {
         }
 
         const labelSpec: ILabelSpec = {
+            useNewLabelDesign: data.useNewLabels,
             date: showDate && isValidDate(data.date) ? data.date : undefined,
             objective: data.label,
             images,
@@ -79,10 +102,18 @@ export const Form = () => {
     return (
         <div className='label-app'>
             <form onSubmit={handleSubmit(submit)}>
-
-                <div className='label-sizing'>
-                    <div className='is-size-4'>
-                        Labels Per Page
+                <div className="is-size-4">
+                    Updated Label Style
+                </div>
+                <div className="show-date-picker">
+                    <label className="checkbox">
+                        <input type="checkbox" {...register('useNewLabels')} />
+                        New Labels
+                    </label>
+                </div>
+                <div className="label-sizing">
+                    <div className="is-size-4">
+                    Labels Per Page
                     </div>
                     <div className='label-sizing-options'>
                         <label className='radio'>
@@ -182,10 +213,38 @@ export const Form = () => {
                                 Punctuation
                             </label>
                         </div>
+
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('capitals')} />
+                                Capital Letters
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('pencilGrip')} />
+                                Pencil Grip
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('phonicsSkills')} />
+                                Phonics Skills
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className='checkbox'>
+                                <input type="checkbox" {...register('greatIdeas')} />
+                                Great Ideas
+                            </label>
+                        </div>
                     </div>
                 </div>
 
-                <hr />
+                <hr/>
 
                 <button className='button is-primary' type="submit">Download</button>
             </form>

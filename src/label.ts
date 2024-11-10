@@ -7,6 +7,8 @@ export interface ILabelFormat {
     verticalPitch: number;
     leftMargin: number;
     topMargin: number;
+    fontSize: number;
+    imageSize: number;
 }
 
 export const TwentyFourPerSheet: ILabelFormat = {
@@ -18,7 +20,9 @@ export const TwentyFourPerSheet: ILabelFormat = {
     horizontalPitch: 66,
     verticalPitch: 33.9,
     leftMargin: 7.25,
-    topMargin: 12.9
+    topMargin: 12.9,
+    fontSize: 10,
+    imageSize: 8
 }
 
 export const EightPerSheet: ILabelFormat = {
@@ -30,7 +34,9 @@ export const EightPerSheet: ILabelFormat = {
     horizontalPitch: 101.6,
     verticalPitch: 67.7,
     leftMargin: 4.65,
-    topMargin: 13.1
+    topMargin: 13.1,
+    fontSize: 16,
+    imageSize: 12
 }
 
 export const SixtyFivePerSheet: ILabelFormat = {
@@ -42,5 +48,7 @@ export const SixtyFivePerSheet: ILabelFormat = {
     horizontalPitch: 40.6,
     verticalPitch: 21.2,
     leftMargin: 4.75,
-    topMargin: 10.7
+    topMargin: 10.7,
+    fontSize: 8,
+    imageSize: 6
 }
