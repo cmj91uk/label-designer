@@ -54,7 +54,7 @@ const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILab
 
     drawOuterBox(doc, coords);
 
-    const margin = 3;
+    const margin = 4;
     const usableWidth = coords.width - (2 * margin);
     const usableHeight = coords.height - (2 * margin);
     const usableCoords: ICoords = {
