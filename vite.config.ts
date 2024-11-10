@@ -5,7 +5,10 @@ import { VitePluginRadar, VitePluginRadarOptions } from 'vite-plugin-radar'
 const radarOptions: VitePluginRadarOptions = {
   enableDev: false,
   analytics: {
-    id: 'G-EZWT2P78W7'
+    id: 'G-EZWT2P78W7',
+    config: {
+      cookie_flags: 'SameSite=None; Secure'
+    }
   }
 }
 
