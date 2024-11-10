@@ -7,7 +7,7 @@ const radarOptions: VitePluginRadarOptions = {
   analytics: {
     id: 'G-EZWT2P78W7',
     config: {
-      cookie_flags: 'SameSite=None; Secure'
+      cookie_flags: '{ \'cookieFlags\': \'SameSite=None; Secure\' }'
     }
   }
 }
