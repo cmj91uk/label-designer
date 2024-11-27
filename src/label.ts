@@ -52,3 +52,17 @@ export const SixtyFivePerSheet: ILabelFormat = {
     fontSize: 8,
     imageSize: 6
 }
+
+export const FourteenPerSheet: ILabelFormat = {
+    // https://www.labelplanet.co.uk/label-templates-for-rounded-rectangle-labels/label-templates-14-per-sheet-lp14-99/
+    countX: 2,
+    countY: 7,
+    width: 99.1,
+    height: 38.1,
+    horizontalPitch: 101.6,
+    verticalPitch: 38.1,
+    leftMargin: 4.65,
+    topMargin: 15.15,
+    fontSize: 10,
+    imageSize: 8
+}
