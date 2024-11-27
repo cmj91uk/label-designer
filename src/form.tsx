@@ -1,7 +1,7 @@
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { buildPdf } from './pdf-builder';
 import { FingerSpace, Formation, FullStop, Punctuation, GreatIdeas, Capital, PencilGrip, PhonicsSkills } from './icons';
-import { EightPerSheet, ILabelFormat, SixtyFivePerSheet, TwentyFourPerSheet } from './label';
+import { EightPerSheet, ILabelFormat, SixtyFivePerSheet, TwentyFourPerSheet, FourteenPerSheet } from './label';
 import { ILabelSpec } from './label-spec';
 import { formatDate } from './dateFormatter';
 
@@ -18,7 +18,7 @@ interface LessonForm {
     pencilGrip: boolean,
     capitals: boolean,
     phonicsSkills: boolean,
-    labelFormat: 'eight' | 'twentyfour' | 'sixtyfive',
+    labelFormat: 'eight' | 'twentyfour' | 'sixtyfive' | 'fourteen',
     dateFormat: 'long' | 'short'
 }
 
@@ -83,6 +83,9 @@ export const Form = () => {
             case 'sixtyfive':
                 format = SixtyFivePerSheet
                 break;
+            case 'fourteen':
+                format = FourteenPerSheet;
+                break;
         }
 
         const labelSpec: ILabelSpec = {
@@ -119,6 +122,10 @@ export const Form = () => {
                         <label className='radio'>
                             <input type='radio' value='eight' {...register('labelFormat')} />
                             Eight
+                        </label>
+                        <label className='radio'>
+                            <input type='radio' value='fourteen' {...register('labelFormat')} />
+                            Fourteen
                         </label>
                         <label className='radio'>
                             <input type='radio' value='twentyfour' {...register('labelFormat')} />
