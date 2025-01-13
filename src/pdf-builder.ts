@@ -69,7 +69,7 @@ const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILab
         text.push(formatDate(labelSpec.dateFormat, labelSpec.date))
         text.push("");
     }
-    text.push(`LO: ${labelSpec.objective}`)
+    text.push(`${labelSpec.objective}`)
     addLabelText(doc, usableCoords, text);
 
     if (labelSpec.images.length) {
@@ -187,7 +187,7 @@ const buildPdfOld = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWid
             const verticalOffset = dateFormat == 'long' ? 14 : 7;
 
             doc.text(dateTextToDisplay, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
-            doc.text(`LO: ${objective}`, labelStartX + margin, labelStartY + margin + verticalOffset, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
+            doc.text(`${objective}`, labelStartX + margin, labelStartY + margin + verticalOffset, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
             // doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
             // doc.text(`End X: ${labelStartX + width}, End Y: ${labelStartY + height}`, labelStartX + margin, labelStartY + margin + 14, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
 
