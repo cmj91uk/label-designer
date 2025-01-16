@@ -86,6 +86,9 @@ export const Form = () => {
             case 'eight':
                 format = EightPerSheet
                 break;
+            case 'fourteen':
+                format = FourteenPerSheet
+                break;
             case 'twentyfour':
                 format = TwentyFourPerSheet
                 break;
@@ -128,6 +131,10 @@ export const Form = () => {
                             <label className="radio">
                                 <input type="radio" value="eight" {...register('labelFormat')} />
                                 Eight
+                            </label>
+                            <label className='radio'>
+                                <input type='radio' value='fourteen' {...register('labelFormat')} />
+                                Fourteen
                             </label>
                             <label className="radio">
                                 <input type="radio" value="twentyfour" {...register('labelFormat')} />
