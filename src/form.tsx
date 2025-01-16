@@ -1,7 +1,7 @@
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { buildPdf } from './pdf-builder';
 import { FingerSpace, Formation, FullStop, Punctuation, GreatIdeas, Capital, PencilGrip, PhonicsSkills, Target } from './icons';
-import { EightPerSheet, ILabelFormat, SixtyFivePerSheet, TwentyFourPerSheet, FourteenPerSheet } from './label';
+import { EightPerSheet, ILabelFormat, SixtyFivePerSheet, TwentyFourPerSheet, FourteenPerSheet, EighteenPerSheet } from './label';
 import { ILabelSpec } from './label-spec';
 import { formatDate } from './dateFormatter';
 
@@ -19,7 +19,7 @@ interface LessonForm {
     capitals: boolean,
     phonicsSkills: boolean,
     target: boolean,
-    labelFormat: 'eight' | 'twentyfour' | 'sixtyfive' | 'fourteen',
+    labelFormat: 'eight' | 'twentyfour' | 'sixtyfive' | 'fourteen' | 'eighteen',
     dateFormat: 'long' | 'short'
 }
 
@@ -38,7 +38,7 @@ export const Form = () => {
     } = useForm<LessonForm>({
         defaultValues: {
             showDate: true,
-            labelFormat: 'twentyfour',
+            labelFormat: 'eighteen',
             dateFormat: 'long',
             useNewLabels: true
         }
@@ -84,19 +84,22 @@ export const Form = () => {
         let format: ILabelFormat = TwentyFourPerSheet;
         switch (data.labelFormat) {
             case 'eight':
-                format = EightPerSheet
-                break;
-            case 'fourteen':
-                format = FourteenPerSheet
-                break;
-            case 'twentyfour':
-                format = TwentyFourPerSheet
-                break;
-            case 'sixtyfive':
-                format = SixtyFivePerSheet
+                format = EightPerSheet;
                 break;
             case 'fourteen':
                 format = FourteenPerSheet;
+                break;
+            case 'twentyfour':
+                format = TwentyFourPerSheet;
+                break;
+            case 'sixtyfive':
+                format = SixtyFivePerSheet;
+                break;
+            case 'fourteen':
+                format = FourteenPerSheet;
+                break;
+            case 'eighteen':
+                format = EighteenPerSheet;
                 break;
         }
 
@@ -135,6 +138,10 @@ export const Form = () => {
                             <label className='radio'>
                                 <input type='radio' value='fourteen' {...register('labelFormat')} />
                                 Fourteen
+                            </label>
+                            <label className='radio'>
+                                <input type='radio' value='eighteen' {...register('labelFormat')} />
+                                Eighteen
                             </label>
                             <label className="radio">
                                 <input type="radio" value="twentyfour" {...register('labelFormat')} />
