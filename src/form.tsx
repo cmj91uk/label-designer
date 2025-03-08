@@ -1,11 +1,23 @@
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { buildPdf } from './pdf-builder';
-import { FingerSpace, Formation, FullStop, Punctuation, GreatIdeas, Capital, PencilGrip, PhonicsSkills, Target } from './icons';
+import {
+    FingerSpace,
+    Formation,
+    FullStop,
+    Punctuation,
+    GreatIdeas,
+    Capital,
+    PencilGrip,
+    PhonicsSkills,
+    Target,
+    Ascenders
+} from './icons';
 import { EightPerSheet, ILabelFormat, SixtyFivePerSheet, TwentyFourPerSheet, FourteenPerSheet, EighteenPerSheet } from './label';
 import { ILabelSpec } from './label-spec';
 import { formatDate } from './dateFormatter';
 
 interface LessonForm {
+    ascenders: boolean;
     useNewLabels: boolean,
     showDate: boolean,
     date?: Date,
@@ -81,6 +93,10 @@ export const Form = () => {
             images.push(Target);
         }
 
+        if (data.ascenders) {
+            images.push(Ascenders);
+        }
+
         let format: ILabelFormat = TwentyFourPerSheet;
         switch (data.labelFormat) {
             case 'eight':
@@ -94,9 +110,6 @@ export const Form = () => {
                 break;
             case 'sixtyfive':
                 format = SixtyFivePerSheet;
-                break;
-            case 'fourteen':
-                format = FourteenPerSheet;
                 break;
             case 'eighteen':
                 format = EighteenPerSheet;
@@ -262,6 +275,13 @@ export const Form = () => {
                             <label className="checkbox">
                                 <input type="checkbox" {...register('greatIdeas')} />
                                 Great Ideas
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className="checkbox">
+                                <input type="checkbox" {...register('ascenders')} />
+                                Ascenders
                             </label>
                         </div>
 

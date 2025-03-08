@@ -50,7 +50,7 @@ export const SixtyFivePerSheet: ILabelFormat = {
     leftMargin: 4.75,
     topMargin: 10.7,
     fontSize: 8,
-    imageSize: 6
+    imageSize: 10
 }
 
 export const FourteenPerSheet: ILabelFormat = {

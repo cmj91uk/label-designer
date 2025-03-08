@@ -32,20 +32,6 @@ const drawOuterBox: (doc: jsPDF, coords: ICoords) => void =
         }
     }
 
-// const addLessonObjective: (doc: jsPDF, coords: ICoords, objective: string) => void =
-//     (doc, coords, objective) => {
-//         const { x, y, width } = coords;
-//         doc.text(`LO: ${objective}`, x, y, { maxWidth: width, align: 'left', baseline: 'top' })
-//     }
-//
-// const addDate: (doc: jsPDF, coords: ICoords, date: Date | undefined, dateFormat: "long" | "short") => void =
-//     (doc, coords, date, dateFormat) => {
-//         const {  x, y, width } = coords;
-//         const hasDate = date != null;
-//         const formatted = hasDate ? formatDate(dateFormat, date!) : "";
-//         doc.text(formatted, x, y, { maxWidth: width, align: 'left', baseline: 'top' })
-//     }
-
 const addLabelText = (doc: jsPDF, coords: ICoords, text: string[]) => {
     const { x, y, width } = coords;
     doc.text(text, x, y, { maxWidth: width, align: 'left', baseline: 'top' })
@@ -69,14 +55,18 @@ const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILab
         text.push(formatDate(labelSpec.dateFormat, labelSpec.date))
         text.push("");
     }
-    text.push(`${labelSpec.objective}`)
+    if (labelSpec.objective.length > 0) {
+        text.push(`${labelSpec.objective}`)
+    }
     addLabelText(doc, usableCoords, text);
+
+    const hasText = text.length > 0;
 
     if (labelSpec.images.length) {
         const imageWidth = labelFormat.imageSize;
         // We've got some images to add!
         const bottomThird = usableHeight / 3;
-        const imageTop = 2 * bottomThird;
+        const imageTop = hasText ? (2 * bottomThird) : bottomThird;
         const topMargin = (bottomThird - imageWidth) / 2;
 
         // const imageMargins = (usableWidth - (imageWidth * images.length)) / (images.length + 1);
