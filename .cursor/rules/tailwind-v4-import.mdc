@@ -1,0 +1,63 @@
+---
+description: 
+globs: *.css
+alwaysApply: false
+---
+ ---
+description: Ensures Tailwind v4 import syntax is used
+globs: *.css
+---
+
+# Tailwind v4 Import Rule
+
+This rule ensures that the correct import syntax is used for Tailwind CSS v4.
+
+<rule>
+## Rule Description
+
+When using Tailwind CSS v4, the correct import syntax must be used at the top of CSS files.
+
+## Import Format
+
+CSS files using Tailwind v4 should start with:
+
+```css
+@import 'tailwindcss';
+```
+
+## Common Mistakes
+
+1. Using `@tailwind` directives (v3 syntax):
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+2. Using `@config` directive:
+```css
+@config "./tailwind.config.ts";
+```
+
+## How to Fix
+
+Replace any v3 directives or incorrect imports with the single v4 import:
+
+```css
+@import 'tailwindcss';
+```
+
+## Integration
+
+This rule should be applied to:
+- All CSS files using Tailwind
+- Both new and existing stylesheets
+- Files that need to be migrated from Tailwind v3 to v4
+
+## Maintenance
+
+Regularly check CSS files to ensure they're using the correct import syntax, especially when:
+- Creating new stylesheets
+- Migrating from older Tailwind versions
+- Copying styles from external sources
+</rule>
