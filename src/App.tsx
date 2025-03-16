@@ -1,28 +1,15 @@
-// import { ChangeEventHandler, useState } from 'react'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
-// import './App.css'
-// import { buildPdf } from './pdf-builder';
-import { Form } from './form';
-import './app.scss'
+import { useState } from 'react'
+import './app.css'
+import { ExampleForm } from './components/ExampleForm'
+import { LessonForm } from './components/LessonForm'
 
 function App() {
-
-  // const [labelText, setLabelText] = useState<string>("");
-
-  // const downloadPdf = () => {
-  //   buildPdf(labelText);
-  // };
-
-  // const updateLabel: ChangeEventHandler<HTMLInputElement> = (event) => {
-  //   console.log(event.target.value);
-  //   setLabelText(event.target.value);
-  // }
+  const [count, setCount] = useState(0)
 
   return (
-    <>
-      <Form />
-    </>
+    <div className="min-h-screen bg-gray-900 py-12 px-4 sm:px-6">
+      <LessonForm />
+    </div>
   )
 }
 

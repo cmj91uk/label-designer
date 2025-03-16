@@ -1,7 +1,7 @@
 import jsPDF, { jsPDFOptions } from "jspdf"
-import { ILabelFormat } from "./label";
-import { ILabelSpec } from "./label-spec";
-import { formatDate } from './dateFormatter';
+import { ILabelFormat } from "./label.ts";
+import { ILabelSpec } from "./label-spec.ts";
+import { formatDate } from './dateFormatter.ts';
 import { getLabelDetails } from './getLabelDetails.ts';
 
 declare global {

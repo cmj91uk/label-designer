@@ -1,29 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePluginRadar, VitePluginRadarOptions } from 'vite-plugin-radar'
+import tailwindcss from '@tailwindcss/vite'
 
-const radarOptions: VitePluginRadarOptions = {
-  enableDev: false,
-  analytics: {
-    id: 'G-EZWT2P78W7',
-    config: {
-      cookie_flags: '{ \'cookieFlags\': \'SameSite=None; Secure\' }'
-    }
-  }
-}
-
-// https://vitejs.dev/config/
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-      react(),
-      VitePluginRadar(radarOptions)
-  ],
+  plugins: [react(), tailwindcss()],
   base: '/label-designer',
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: 'modern'
-      }
-    }
-  }
 })

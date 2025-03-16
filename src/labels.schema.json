@@ -1,0 +1,96 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/lesson-form-schema.json",
+    "title": "Lesson Form",
+    "description": "Schema for a form containing lesson objectives, date, labels per sheet, and icons",
+    "type": "object",
+    "properties": {
+      "lessonObjective": {
+        "type": "string",
+        "description": "The main objective of the lesson",
+        "minLength": 1
+      },
+      "useDate": {
+        "type": "boolean",
+        "description": "Does a need need to be added to the label?"
+      },
+      "date": {
+        "type": "string",
+        "format": "date",
+        "description": "The date of the lesson"
+      },
+      "dateFormat": {
+        "type": "string",
+        "enum": ["long", "short"],
+        "description": "Format to display the date in (long: 'Monday 1st January 2024', short: '1/1/2024')"
+      },
+      "labelsPerSheet": {
+        "type": "integer",
+        "description": "Number of labels to be printed per sheet",
+        "enum": [8, 14, 18, 24, 65]
+      },
+      "icons": {
+        "type": "array",
+        "description": "List of icons to be displayed",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the icon"
+            },
+            "enabled": {
+                "type": "boolean",
+                "description": "Is the icon enabled?"
+            }
+          },
+          "maxItems": 3,
+          "required": ["name", "enabled"],
+          "enum": [
+            {
+                "name": "Finger Spaces",
+                "enabled": false
+            },
+            {
+                "name": "Full Stop",
+                "enabled": false
+            },
+            {
+                "name": "Letter Formation",
+                "enabled": false
+            },
+            {
+                "name": "Punctuation",
+                "enabled": false
+            },
+            {
+                "name": "Capital Letters",
+                "enabled": false
+            },
+            {
+                "name": "Pencil Grip",
+                "enabled": false
+            },
+            {
+                "name": "Phonics Skills",
+                "enabled": false
+            },
+            {
+                "name": "Great Ideas",
+                "enabled": false
+            },
+            {
+                "name": "Ascenders",
+                "enabled": false
+            },
+            {
+                "name": "Target",
+                "enabled": false
+            }
+          ]
+        }
+      }
+    },
+    "required": ["lessonObjective", "labelsPerSheet"]
+  }
+  
