@@ -130,13 +130,7 @@ export const LessonForm: React.FC = () => {
         placeholder="Enter the main objective of the lesson"
         rows={3}
         className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400 placeholder-gray-400"
-        {...register("lessonObjective", {
-          required: "Lesson objective is required",
-          minLength: {
-            value: 1,
-            message: "Lesson objective cannot be empty"
-          }
-        })}
+        {...register("lessonObjective")}
       />
 
       <Checkbox

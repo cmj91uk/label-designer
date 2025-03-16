@@ -91,6 +91,6 @@
         }
       }
     },
-    "required": ["lessonObjective", "labelsPerSheet"]
+    "required": ["labelsPerSheet"]
   }
   
