@@ -185,9 +185,6 @@ export const LessonForm: React.FC = () => {
           />
 
           <div className="mt-3">
-            <label className="block text-sm font-medium text-gray-200 mb-1">
-              Date Format
-            </label>
             <Select
               label="Date Format"
               register={register}
