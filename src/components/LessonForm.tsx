@@ -15,6 +15,7 @@ import {
   EightPerSheet,
   FourteenPerSheet,
   EighteenPerSheet,
+  TwentyOnePerSheet,
   TwentyFourPerSheet,
   SixtyFivePerSheet,
   ILabelFormat
@@ -42,6 +43,7 @@ const LABELS_PER_SHEET_OPTIONS = [
   { value: '8', label: '8 Labels' },
   { value: '14', label: '14 Labels' },
   { value: '18', label: '18 Labels' },
+  { value: '21', label: '21 Labels' },
   { value: '24', label: '24 Labels' },
   { value: '65', label: '65 Labels' },
 ];
@@ -63,6 +65,7 @@ const LABEL_FORMATS: { [key: string]: ILabelFormat } = {
   '8': EightPerSheet,
   '14': FourteenPerSheet,
   '18': EighteenPerSheet,
+  '21': TwentyOnePerSheet,
   '24': TwentyFourPerSheet,
   '65': SixtyFivePerSheet,
 };
@@ -204,7 +207,7 @@ export const LessonForm: React.FC = () => {
           required: "Labels per sheet is required",
           validate: (value) => {
             const numValue = parseInt(value.toString(), 10);
-            return [8, 14, 18, 24, 65].includes(numValue) || "Invalid number of labels per sheet";
+            return [8, 14, 18, 21, 24, 65].includes(numValue) || "Invalid number of labels per sheet";
           }
         })}
       />
