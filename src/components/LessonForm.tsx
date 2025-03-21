@@ -22,7 +22,7 @@ import {
 } from '../label';
 
 // Import icon assets
-import { FingerSpace, Formation, FullStop, Punctuation, Capital, PencilGrip, GreatIdeas, PhonicsSkills, Target, Ascenders } from '../icons';
+import { FingerSpace, Formation, FullStop, Punctuation, Capital, PencilGrip, GreatIdeas, PhonicsSkills, Target, Ascenders, Spade } from '../icons';
 
 interface Icon {
   name: string;
@@ -58,7 +58,8 @@ const AVAILABLE_ICONS: Icon[] = [
   { name: "Phonics Skills", enabled: false, image: PhonicsSkills },
   { name: "Great Ideas", enabled: false, image: GreatIdeas },
   { name: "Ascenders", enabled: false, image: Ascenders },
-  { name: "Target", enabled: false, image: Target }
+  { name: "Target", enabled: false, image: Target },
+  { name: "Digging Deeper", enabled: false, image: Spade },
 ];
 
 const LABEL_FORMATS: { [key: string]: ILabelFormat } = {
