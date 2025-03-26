@@ -30,7 +30,7 @@ interface ImageLayout {
     topOffset: number;
 }
 
-interface IMultiLabelSpec {
+export interface IMultiLabelSpec {
     specs: (ILabelSpec | null)[];  // Array of specs, null means leave position empty
     defaultSpec?: ILabelSpec;      // Optional default spec for unfilled positions
 }
@@ -164,29 +164,41 @@ export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IM
 
         // Generate labels
         const { countX, countY } = format;
-        const totalPositions = countX * countY;
+        const labelsPerPage = countX * countY;
 
-        // Handle both single spec and multi-spec cases
         if ('specs' in labelSpecs) {
             // Multi-label case
-            if (labelSpecs.specs.length > totalPositions) {
-                throw new Error(`Too many label specifications. Maximum allowed: ${totalPositions}`);
-            }
+            const totalLabels = labelSpecs.specs.filter(spec => spec !== null).length;
+            const totalPages = Math.ceil(totalLabels / labelsPerPage);
 
-            for (let y = 0; y < countY; y++) {
-                for (let x = 0; x < countX; x++) {
-                    const position = y * countX + x;
-                    const spec = position < labelSpecs.specs.length 
-                        ? labelSpecs.specs[position] 
-                        : labelSpecs.defaultSpec || null;
+            for (let page = 0; page < totalPages; page++) {
+                // Add a new page for all pages except the first
+                if (page > 0) {
+                    doc.addPage();
+                }
 
-                    if (spec) {
-                        if (spec.images.length > 3) {
-                            throw new Error(`Maximum of 3 images allowed per label at position ${position}`);
+                // Calculate the start and end indices for this page
+                const startIdx = page * labelsPerPage;
+                const endIdx = Math.min((page + 1) * labelsPerPage, labelSpecs.specs.length);
+
+                // Get the specs for this page
+                const pageSpecs = labelSpecs.specs.slice(startIdx, endIdx);
+
+                // Fill the page with labels
+                for (let y = 0; y < countY; y++) {
+                    for (let x = 0; x < countX; x++) {
+                        const position = y * countX + x;
+                        if (position >= pageSpecs.length) break;
+
+                        const spec = pageSpecs[position];
+                        if (spec) {
+                            if (spec.images.length > 3) {
+                                throw new Error(`Maximum of 3 images allowed per label at position ${position + startIdx}`);
+                            }
+                            const { top, left, width, height } = getLabelDetails(format, x, y);
+                            const coords: ICoords = { x: left, y: top, width, height };
+                            await buildLabel(doc, format, spec, coords);
                         }
-                        const { top, left, width, height } = getLabelDetails(format, x, y);
-                        const coords: ICoords = { x: left, y: top, width, height };
-                        await buildLabel(doc, format, spec, coords);
                     }
                 }
             }
@@ -205,11 +217,8 @@ export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IM
             }
         }
 
-        // Save PDF with a default name if no objective is specified
-        const fileName = ('specs' in labelSpecs) 
-            ? 'multi-label-sheet.pdf'
-            : `${labelSpecs.objective || 'label-sheet'}.pdf`;
-        doc.save(fileName);
+        // Save PDF with a default name
+        doc.save('label-sheet.pdf');
         return doc;
     } catch (error) {
         console.error('PDF generation failed:', error);

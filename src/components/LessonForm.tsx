@@ -1,10 +1,11 @@
 /* AI-Generated Code Start
  * Generated on: 2024-03-21
- * Purpose: Multi-label form component
+ * Modified on: 2024-03-21
+ * Purpose: Multi-label form component with quantity support
  * Generator: Cursor AI
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-form';
 import { TextArea, Select, Checkbox } from './FormControls';
 import DatePicker from 'react-datepicker';
@@ -20,6 +21,7 @@ import {
   SixtyFivePerSheet,
   ILabelFormat
 } from '../label';
+import { IMultiLabelSpec } from '../pdf-builder';
 
 // Import icon assets
 import { FingerSpace, Formation, FullStop, Punctuation, Capital, PencilGrip, GreatIdeas, PhonicsSkills, Target, Ascenders, Spade } from '../icons';
@@ -36,7 +38,7 @@ interface LabelSpec {
   date?: string;
   dateFormat: 'long' | 'short';
   icons: Icon[];
-  positions: number[];
+  quantity: number;
 }
 
 interface LessonFormData {
@@ -88,43 +90,40 @@ const LabelSpecForm: React.FC<{
   const useDate = watch(`labels.${index}.useDate`);
   const iconValues = watch(`labels.${index}.icons`);
   const selectedIconsCount = iconValues?.filter((icon: Icon) => icon.enabled).length || 0;
-  const MAX_ICONS = 3;
 
   return (
-    <div className="p-4 mb-4 border border-gray-700 rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-100">Label {index + 1}</h3>
-        <button
-          type="button"
-          onClick={() => remove(index)}
-          className="text-red-400 hover:text-red-300"
-        >
-          Remove
-        </button>
-      </div>
+    <div className="mb-8 p-6 bg-gray-800 rounded-lg relative">
+      <button
+        type="button"
+        onClick={() => remove(index)}
+        className="absolute top-4 right-4 text-red-400 hover:text-red-300"
+      >
+        Remove
+      </button>
 
       <TextArea
         label="Lesson Objective"
         register={register}
         error={errors?.labels?.[index]?.lessonObjective?.message}
-        placeholder="Enter the main objective of the lesson"
-        rows={3}
-        className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400 placeholder-gray-400"
+        className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
         {...register(`labels.${index}.lessonObjective`)}
       />
 
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-200 mb-2">
-          Label Positions (1-{totalPositions})
+        <label className="block text-sm font-medium text-gray-200 mb-1">
+          Label Quantity
         </label>
         <input
-          type="text"
-          placeholder="e.g., 1,2,3 or 1-5"
+          type="number"
+          min="1"
           className="w-full px-3 py-2 border rounded-md shadow-sm bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
-          {...register(`labels.${index}.positions`)}
+          {...register(`labels.${index}.quantity`, {
+            required: "Quantity is required",
+            min: { value: 1, message: "Quantity must be at least 1" }
+          })}
         />
-        {errors?.labels?.[index]?.positions && (
-          <p className="mt-1 text-sm text-red-400">{errors.labels[index].positions.message}</p>
+        {errors?.labels?.[index]?.quantity && (
+          <p className="mt-1 text-sm text-red-400">{errors.labels[index].quantity.message}</p>
         )}
       </div>
 
@@ -191,9 +190,9 @@ const LabelSpecForm: React.FC<{
 
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-200 mb-2">
-          Icons (Select up to {MAX_ICONS})
+          Icons (Select up to 3)
           <span className="ml-2 text-sm text-gray-400">
-            {selectedIconsCount} of {MAX_ICONS} selected
+            {selectedIconsCount} of 3 selected
           </span>
         </label>
         {errors?.labels?.[index]?.icons && (
@@ -203,7 +202,7 @@ const LabelSpecForm: React.FC<{
           {AVAILABLE_ICONS.map((icon, iconIndex) => {
             const inputId = `icon-${index}-${iconIndex}`;
             const isSelected = iconValues?.[iconIndex]?.enabled;
-            const isDisabled = !isSelected && selectedIconsCount >= MAX_ICONS;
+            const isDisabled = !isSelected && selectedIconsCount >= 3;
 
             return (
               <label
@@ -212,12 +211,12 @@ const LabelSpecForm: React.FC<{
                 className={`
                   h-16 p-3 rounded-lg cursor-pointer select-none
                   transition-all duration-200 ease-in-out
-                  flex items-center justify-center
+                  flex items-center justify-center text-center
                   ${isSelected
                     ? 'bg-fuchsia-900 border-2 border-fuchsia-400 text-fuchsia-100 shadow-lg'
                     : isDisabled
-                      ? 'bg-gray-800 border-2 border-transparent text-gray-500 cursor-not-allowed'
-                      : 'bg-gray-700 border-2 border-transparent hover:bg-gray-600 text-gray-200'
+                      ? 'bg-gray-900 border-2 border-transparent text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-900 border-2 border-transparent hover:bg-gray-800 text-gray-200 hover:border-gray-700'
                   }
                 `}
               >
@@ -227,15 +226,15 @@ const LabelSpecForm: React.FC<{
                   disabled={isDisabled}
                   className="sr-only"
                   {...register(`labels.${index}.icons.${iconIndex}.enabled`, {
-                    onChange: (e) => {
-                      if (e.target.checked && selectedIconsCount >= MAX_ICONS) {
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                      if (e.target.checked && selectedIconsCount >= 3) {
                         e.preventDefault();
                         return false;
                       }
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-center">{icon.name}</span>
+                <span className="text-sm font-medium">{icon.name}</span>
               </label>
             );
           })}
@@ -251,6 +250,7 @@ export const LessonForm: React.FC = () => {
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<LessonFormData>({
     defaultValues: {
@@ -261,7 +261,7 @@ export const LessonForm: React.FC = () => {
         date: '',
         dateFormat: 'short',
         icons: AVAILABLE_ICONS,
-        positions: []
+        quantity: 8 // Default to match initial labelsPerSheet
       }]
     }
   });
@@ -275,31 +275,26 @@ export const LessonForm: React.FC = () => {
   const format = LABEL_FORMATS[labelsPerSheet];
   const totalPositions = format ? format.countX * format.countY : 0;
 
-  const parsePositions = (posStr: string): number[] => {
-    if (!posStr) return [];
-    
-    const positions: number[] = [];
-    const parts = posStr.split(',').map(p => p.trim());
-    
-    for (const part of parts) {
-      if (part.includes('-')) {
-        const [start, end] = part.split('-').map(Number);
-        if (!isNaN(start) && !isNaN(end)) {
-          for (let i = start; i <= end; i++) {
-            if (i > 0 && i <= totalPositions && !positions.includes(i)) {
-              positions.push(i);
-            }
-          }
-        }
-      } else {
-        const num = Number(part);
-        if (!isNaN(num) && num > 0 && num <= totalPositions && !positions.includes(num)) {
-          positions.push(num);
-        }
-      }
+  // Update quantities when labels per sheet changes
+  const previousLabelsPerSheetRef = React.useRef(labelsPerSheet);
+  useEffect(() => {
+    if (previousLabelsPerSheetRef.current !== labelsPerSheet) {
+      fields.forEach((field, index) => {
+        setValue(`labels.${index}.quantity`, totalPositions);
+      });
+      previousLabelsPerSheetRef.current = labelsPerSheet;
     }
-    
-    return positions.sort((a, b) => a - b);
+  }, [labelsPerSheet, fields, setValue, totalPositions]);
+
+  const handleAddLabel = () => {
+    append({
+      lessonObjective: '',
+      useDate: false,
+      date: '',
+      dateFormat: 'short',
+      icons: AVAILABLE_ICONS,
+      quantity: totalPositions
+    });
   };
 
   const onSubmit: SubmitHandler<LessonFormData> = async (data) => {
@@ -310,36 +305,48 @@ export const LessonForm: React.FC = () => {
       return;
     }
 
-    // Convert form data to IMultiLabelSpec
-    const specs = new Array(totalPositions).fill(null);
+    const labelsPerPage = format.countX * format.countY;
     
-    data.labels.forEach(label => {
-      const positions = parsePositions(label.positions.toString());
-      const selectedIcons = label.icons
-        .filter(icon => icon.enabled)
-        .map(icon => icon.image);
-
-      const spec: ILabelSpec = {
-        date: label.useDate ? new Date(label.date!) : undefined,
-        objective: label.lessonObjective,
-        images: selectedIcons,
-        dateFormat: label.dateFormat
-      };
-
-      positions.forEach(pos => {
-        specs[pos - 1] = spec;
-      });
-    });
-
     try {
-      await buildPdf(format, { specs });
+      // Calculate total labels needed
+      const totalLabels = data.labels.reduce((sum, label) => sum + label.quantity, 0);
+      const totalPages = Math.ceil(totalLabels / labelsPerPage);
+      const totalSpecs = totalPages * labelsPerPage;
+      
+      // Create specs array large enough for all pages
+      const specs = new Array(totalSpecs).fill(null);
+      let currentPosition = 0;
+      
+      // Fill the specs array with labels
+      for (const label of data.labels) {
+        const selectedIcons = label.icons
+          .filter(icon => icon.enabled)
+          .map(icon => icon.image);
+
+        const spec: ILabelSpec = {
+          date: label.useDate ? new Date(label.date!) : undefined,
+          objective: label.lessonObjective,
+          images: selectedIcons,
+          dateFormat: label.dateFormat
+        };
+
+        // Add this label's quantity to the specs array
+        for (let i = 0; i < label.quantity; i++) {
+          specs[currentPosition] = spec;
+          currentPosition++;
+        }
+      }
+
+      // Generate the PDF with all labels
+      const multiPageSpec: IMultiLabelSpec = { specs };
+      await buildPdf(format, multiPageSpec);
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 bg-gray-900 rounded-lg shadow-xl border border-gray-800">
       <h2 className="text-2xl font-bold mb-6 text-gray-100">MSJ Label Builder</h2>
 
       <div className="mb-6">
@@ -372,21 +379,27 @@ export const LessonForm: React.FC = () => {
         />
       ))}
 
-      <div className="flex justify-between mt-4">
+      <div className="flex justify-between items-center mt-4">
         <button
           type="button"
-          onClick={() => append({
-            lessonObjective: '',
-            useDate: false,
-            date: '',
-            dateFormat: 'short',
-            icons: AVAILABLE_ICONS,
-            positions: []
-          })}
+          onClick={handleAddLabel}
           className="px-4 py-2 bg-fuchsia-600 text-white rounded-md hover:bg-fuchsia-700"
         >
           Add Another Label
         </button>
+
+        {fields.length > 0 && (
+          <div className="text-gray-300 text-sm">
+            {(() => {
+              const totalLabels = fields.reduce((sum, field, index) => {
+                const quantity = watch(`labels.${index}.quantity`);
+                return sum + (quantity ? parseInt(quantity.toString(), 10) : 0);
+              }, 0);
+              const pages = Math.ceil(totalLabels / totalPositions);
+              return `${totalLabels} labels on ${pages} page${pages !== 1 ? 's' : ''}`;
+            })()}
+          </div>
+        )}
 
         <button
           type="submit"
