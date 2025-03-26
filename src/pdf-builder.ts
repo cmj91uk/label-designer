@@ -1,4 +1,4 @@
-import jsPDF, { jsPDFOptions } from "jspdf"
+import jsPDF from "jspdf"
 import { ILabelFormat } from "./label.ts";
 import { ILabelSpec } from "./label-spec.ts";
 import { formatDate } from './dateFormatter.ts';
