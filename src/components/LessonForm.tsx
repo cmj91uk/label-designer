@@ -1,11 +1,12 @@
 /* AI-Generated Code Start
- * Generated on: 2024-03-16
- * Purpose: Lesson form component based on JSON schema
+ * Generated on: 2024-03-21
+ * Modified on: 2024-03-21
+ * Purpose: Multi-label form component with quantity support
  * Generator: Cursor AI
  */
 
-import React from 'react';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
+import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-form';
 import { TextArea, Select, Checkbox } from './FormControls';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -20,6 +21,7 @@ import {
   SixtyFivePerSheet,
   ILabelFormat
 } from '../label';
+import { IMultiLabelSpec } from '../pdf-builder';
 
 // Import icon assets
 import { FingerSpace, Formation, FullStop, Punctuation, Capital, PencilGrip, GreatIdeas, PhonicsSkills, Target, Ascenders, Spade } from '../icons';
@@ -30,13 +32,18 @@ interface Icon {
   image: string;
 }
 
-interface LessonFormData {
+interface LabelSpec {
   lessonObjective: string;
   useDate: boolean;
   date?: string;
   dateFormat: 'long' | 'short';
-  labelsPerSheet: number;
   icons: Icon[];
+  quantity: number;
+}
+
+interface LessonFormData {
+  labelsPerSheet: number;
+  labels: LabelSpec[];
 }
 
 const LABELS_PER_SHEET_OPTIONS = [
@@ -71,77 +78,60 @@ const LABEL_FORMATS: { [key: string]: ILabelFormat } = {
   '65': SixtyFivePerSheet,
 };
 
-export const LessonForm: React.FC = () => {
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<LessonFormData>({
-    defaultValues: {
-      lessonObjective: '',
-      useDate: false,
-      date: '',
-      dateFormat: 'short',
-      labelsPerSheet: 8,
-      icons: AVAILABLE_ICONS,
-    }
-  });
-
-  const useDate = watch('useDate');
-  const iconValues = watch('icons');
-
-  const selectedIconsCount = iconValues?.filter(icon => icon.enabled).length || 0;
-  const MAX_ICONS = 3;
-
-  const onSubmit: SubmitHandler<LessonFormData> = async (data) => {
-    const labelsPerSheet = parseInt(data.labelsPerSheet.toString(), 10);
-    const format = LABEL_FORMATS[labelsPerSheet];
-
-    if (!format) {
-      console.error('Invalid label format');
-      return;
-    }
-
-    const selectedIcons = data.icons
-      .filter(icon => icon.enabled)
-      .map(icon => icon.image);
-
-    const labelSpec: ILabelSpec = {
-      useNewLabelDesign: true,
-      date: data.useDate ? new Date(data.date!) : undefined,
-      objective: data.lessonObjective,
-      images: selectedIcons,
-      dateFormat: data.dateFormat
-    };
-
-    try {
-      await buildPdf(format, labelSpec);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    }
-  };
+const LabelSpecForm: React.FC<{
+  index: number;
+  register: any;
+  control: any;
+  errors: any;
+  watch: any;
+  remove: (index: number) => void;
+  totalPositions: number;
+}> = ({ index, register, control, errors, watch, remove, totalPositions }) => {
+  const useDate = watch(`labels.${index}.useDate`);
+  const iconValues = watch(`labels.${index}.icons`);
+  const selectedIconsCount = iconValues?.filter((icon: Icon) => icon.enabled).length || 0;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
-      <h2 className="text-2xl font-bold mb-6 text-gray-100">MSJ Label Builder</h2>
+    <div className="mb-8 p-6 bg-gray-800 rounded-lg relative">
+      <button
+        type="button"
+        onClick={() => remove(index)}
+        className="absolute top-4 right-4 text-red-400 hover:text-red-300"
+      >
+        Remove
+      </button>
 
       <TextArea
         label="Lesson Objective"
         register={register}
-        error={errors.lessonObjective?.message}
-        placeholder="Enter the main objective of the lesson"
-        rows={3}
-        className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400 placeholder-gray-400"
-        {...register("lessonObjective")}
+        error={errors?.labels?.[index]?.lessonObjective?.message}
+        className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
+        {...register(`labels.${index}.lessonObjective`)}
       />
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-200 mb-1">
+          Label Quantity
+        </label>
+        <input
+          type="number"
+          min="1"
+          className="w-full px-3 py-2 border rounded-md shadow-sm bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
+          {...register(`labels.${index}.quantity`, {
+            required: "Quantity is required",
+            min: { value: 1, message: "Quantity must be at least 1" }
+          })}
+        />
+        {errors?.labels?.[index]?.quantity && (
+          <p className="mt-1 text-sm text-red-400">{errors.labels[index].quantity.message}</p>
+        )}
+      </div>
 
       <Checkbox
         label="Include Date"
         register={register}
-        error={errors.useDate?.message}
-        {...register("useDate")}
+        error={errors?.labels?.[index]?.useDate?.message}
+        {...register(`labels.${index}.useDate`)}
       />
 
       {useDate && (
@@ -151,7 +141,7 @@ export const LessonForm: React.FC = () => {
           </label>
           <Controller
             control={control}
-            name="date"
+            name={`labels.${index}.date`}
             rules={{
               validate: (value) => {
                 if (useDate && !value) {
@@ -186,48 +176,33 @@ export const LessonForm: React.FC = () => {
             <Select
               label="Date Format"
               register={register}
-              error={errors.dateFormat?.message}
+              error={errors?.labels?.[index]?.dateFormat?.message}
               options={[
                 { value: 'short', label: 'Short (1/1/2024)' },
                 { value: 'long', label: 'Long (Monday 1st January 2024)' }
               ]}
               className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
-              {...register("dateFormat")}
+              {...register(`labels.${index}.dateFormat`)}
             />
           </div>
         </div>
       )}
 
-      <Select
-        label="Labels Per Sheet"
-        register={register}
-        error={errors.labelsPerSheet?.message}
-        options={LABELS_PER_SHEET_OPTIONS}
-        className="mb-4 bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
-        {...register("labelsPerSheet", {
-          required: "Labels per sheet is required",
-          validate: (value) => {
-            const numValue = parseInt(value.toString(), 10);
-            return [8, 14, 18, 21, 24, 65].includes(numValue) || "Invalid number of labels per sheet";
-          }
-        })}
-      />
-
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-200 mb-2">
-          Icons (Select up to {MAX_ICONS})
+          Icons (Select up to 3)
           <span className="ml-2 text-sm text-gray-400">
-            {selectedIconsCount} of {MAX_ICONS} selected
+            {selectedIconsCount} of 3 selected
           </span>
         </label>
-        {errors.icons && (
-          <p className="text-sm text-red-400 mb-2">{errors.icons.message}</p>
+        {errors?.labels?.[index]?.icons && (
+          <p className="text-sm text-red-400 mb-2">{errors.labels[index].icons.message}</p>
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {AVAILABLE_ICONS.map((icon, index) => {
-            const inputId = `icon-${index}`;
-            const isSelected = iconValues?.[index]?.enabled;
-            const isDisabled = !isSelected && selectedIconsCount >= MAX_ICONS;
+          {AVAILABLE_ICONS.map((icon, iconIndex) => {
+            const inputId = `icon-${index}-${iconIndex}`;
+            const isSelected = iconValues?.[iconIndex]?.enabled;
+            const isDisabled = !isSelected && selectedIconsCount >= 3;
 
             return (
               <label
@@ -236,12 +211,12 @@ export const LessonForm: React.FC = () => {
                 className={`
                   h-16 p-3 rounded-lg cursor-pointer select-none
                   transition-all duration-200 ease-in-out
-                  flex items-center justify-center
+                  flex items-center justify-center text-center
                   ${isSelected
                     ? 'bg-fuchsia-900 border-2 border-fuchsia-400 text-fuchsia-100 shadow-lg'
                     : isDisabled
-                      ? 'bg-gray-800 border-2 border-transparent text-gray-500 cursor-not-allowed'
-                      : 'bg-gray-700 border-2 border-transparent hover:bg-gray-600 text-gray-200'
+                      ? 'bg-gray-900 border-2 border-transparent text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-900 border-2 border-transparent hover:bg-gray-800 text-gray-200 hover:border-gray-700'
                   }
                 `}
               >
@@ -250,28 +225,189 @@ export const LessonForm: React.FC = () => {
                   id={inputId}
                   disabled={isDisabled}
                   className="sr-only"
-                  {...register(`icons.${index}.enabled`, {
-                    onChange: (e) => {
-                      if (e.target.checked && selectedIconsCount >= MAX_ICONS) {
+                  {...register(`labels.${index}.icons.${iconIndex}.enabled`, {
+                    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                      if (e.target.checked && selectedIconsCount >= 3) {
                         e.preventDefault();
                         return false;
                       }
                     }
                   })}
                 />
-                <span className="text-sm font-medium text-center">{icon.name}</span>
+                <span className="text-sm font-medium">{icon.name}</span>
               </label>
             );
           })}
         </div>
       </div>
+    </div>
+  );
+};
 
-      <button
-        type="submit"
-        className="w-full bg-fuchsia-500 text-white py-2 px-4 rounded-md hover:bg-fuchsia-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
-      >
-        Submit
-      </button>
+export const LessonForm: React.FC = () => {
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<LessonFormData>({
+    defaultValues: {
+      labelsPerSheet: 8,
+      labels: [{
+        lessonObjective: '',
+        useDate: false,
+        date: '',
+        dateFormat: 'short',
+        icons: AVAILABLE_ICONS,
+        quantity: 8 // Default to match initial labelsPerSheet
+      }]
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "labels"
+  });
+
+  const labelsPerSheet = watch('labelsPerSheet');
+  const format = LABEL_FORMATS[labelsPerSheet];
+  const totalPositions = format ? format.countX * format.countY : 0;
+
+  // Update quantities when labels per sheet changes
+  const previousLabelsPerSheetRef = React.useRef(labelsPerSheet);
+  useEffect(() => {
+    if (previousLabelsPerSheetRef.current !== labelsPerSheet) {
+      fields.forEach((field, index) => {
+        setValue(`labels.${index}.quantity`, totalPositions);
+      });
+      previousLabelsPerSheetRef.current = labelsPerSheet;
+    }
+  }, [labelsPerSheet, fields, setValue, totalPositions]);
+
+  const handleAddLabel = () => {
+    append({
+      lessonObjective: '',
+      useDate: false,
+      date: '',
+      dateFormat: 'short',
+      icons: AVAILABLE_ICONS,
+      quantity: totalPositions
+    });
+  };
+
+  const onSubmit: SubmitHandler<LessonFormData> = async (data) => {
+    const format = LABEL_FORMATS[data.labelsPerSheet];
+
+    if (!format) {
+      console.error('Invalid label format');
+      return;
+    }
+
+    const labelsPerPage = format.countX * format.countY;
+    
+    try {
+      // Calculate total labels needed
+      const totalLabels = data.labels.reduce((sum, label) => sum + label.quantity, 0);
+      const totalPages = Math.ceil(totalLabels / labelsPerPage);
+      const totalSpecs = totalPages * labelsPerPage;
+      
+      // Create specs array large enough for all pages
+      const specs = new Array(totalSpecs).fill(null);
+      let currentPosition = 0;
+      
+      // Fill the specs array with labels
+      for (const label of data.labels) {
+        const selectedIcons = label.icons
+          .filter(icon => icon.enabled)
+          .map(icon => icon.image);
+
+        const spec: ILabelSpec = {
+          date: label.useDate ? new Date(label.date!) : undefined,
+          objective: label.lessonObjective,
+          images: selectedIcons,
+          dateFormat: label.dateFormat
+        };
+
+        // Add this label's quantity to the specs array
+        for (let i = 0; i < label.quantity; i++) {
+          specs[currentPosition] = spec;
+          currentPosition++;
+        }
+      }
+
+      // Generate the PDF with all labels
+      const multiPageSpec: IMultiLabelSpec = { specs };
+      await buildPdf(format, multiPageSpec);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 bg-gray-900 rounded-lg shadow-xl border border-gray-800">
+      <h2 className="text-2xl font-bold mb-6 text-gray-100">MSJ Label Builder</h2>
+
+      <div className="mb-6">
+        <Select
+          label="Labels Per Sheet"
+          register={register}
+          error={errors.labelsPerSheet?.message}
+          options={LABELS_PER_SHEET_OPTIONS}
+          className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
+          {...register("labelsPerSheet", {
+            required: "Labels per sheet is required",
+            validate: (value) => {
+              const numValue = parseInt(value.toString(), 10);
+              return [8, 14, 18, 21, 24, 65].includes(numValue) || "Invalid number of labels per sheet";
+            }
+          })}
+        />
+      </div>
+
+      {fields.map((field, index) => (
+        <LabelSpecForm
+          key={field.id}
+          index={index}
+          register={register}
+          control={control}
+          errors={errors}
+          watch={watch}
+          remove={remove}
+          totalPositions={totalPositions}
+        />
+      ))}
+
+      <div className="flex justify-between items-center mt-4">
+        <button
+          type="button"
+          onClick={handleAddLabel}
+          className="px-4 py-2 bg-fuchsia-600 text-white rounded-md hover:bg-fuchsia-700"
+        >
+          Add Another Label
+        </button>
+
+        {fields.length > 0 && (
+          <div className="text-gray-300 text-sm">
+            {(() => {
+              const totalLabels = fields.reduce((sum, field, index) => {
+                const quantity = watch(`labels.${index}.quantity`);
+                return sum + (quantity ? parseInt(quantity.toString(), 10) : 0);
+              }, 0);
+              const pages = Math.ceil(totalLabels / totalPositions);
+              return `${totalLabels} labels on ${pages} page${pages !== 1 ? 's' : ''}`;
+            })()}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="px-4 py-2 bg-fuchsia-500 text-white rounded-md hover:bg-fuchsia-600"
+        >
+          Generate PDF
+        </button>
+      </div>
     </form>
   );
 };

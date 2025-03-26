@@ -18,194 +18,210 @@ interface ICoords {
     width: number;
 }
 
-const drawOuterBox: (doc: jsPDF, coords: ICoords) => void =
-    (doc, coords) => {
-        if (window.DEBUG === 'true') {
+interface TextLayout {
+    fontSize: number;
+    lineHeight: number;
+    maxLines: number;
+}
 
-            const { x, y, width, height } = coords;
+interface ImageLayout {
+    width: number;
+    spacing: number;
+    topOffset: number;
+}
 
-            // Draw Outer Rectangle
-            const stroke = 'S';
-            const rectRadius = 5;
-            // Slightly inset rounded rectangle
-            doc.roundedRect(x, y, width, height, rectRadius, rectRadius, stroke);
-        }
+export interface IMultiLabelSpec {
+    specs: (ILabelSpec | null)[];  // Array of specs, null means leave position empty
+    defaultSpec?: ILabelSpec;      // Optional default spec for unfilled positions
+}
+
+const isDebugMode = () => window.DEBUG === 'true';
+
+const drawOuterBox = (doc: jsPDF, coords: ICoords): void => {
+    if (isDebugMode()) {
+        const { x, y, width, height } = coords;
+        const rectRadius = 5;
+        doc.roundedRect(x, y, width, height, rectRadius, rectRadius, 'S');
+    }
+};
+
+const calculateTextLayout = (height: number, hasImages: boolean): TextLayout => {
+    const baseLayout = {
+        fontSize: 12,
+        lineHeight: 1.2,
+        maxLines: Math.floor(height / (12 * 1.2))
+    };
+
+    if (hasImages) {
+        return {
+            ...baseLayout,
+            maxLines: Math.floor(baseLayout.maxLines * 0.6)
+        };
     }
 
-const addLabelText = (doc: jsPDF, coords: ICoords, text: string[]) => {
-    const { x, y, width } = coords;
-    doc.text(text, x, y, { maxWidth: width, align: 'left', baseline: 'top' })
+    return baseLayout;
 };
-const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILabelSpec, coords: ICoords) => {
 
+const calculateImageLayout = (coords: ICoords, imageCount: number, imageSize: number, hasText: boolean): ImageLayout => {
+    // Calculate total width needed for images
+    const totalImageWidth = imageSize * imageCount;
+    // Calculate remaining space
+    const remainingSpace = coords.width - totalImageWidth;
+    // For multiple images, divide remaining space by gaps between images (count-1) and edges
+    const spacing = imageCount > 1 
+        ? remainingSpace / (imageCount + 1)
+        : remainingSpace / 2; // For single image, split remaining space equally for left/right
+    
+    return {
+        width: imageSize,
+        spacing,
+        // If no text, center vertically, otherwise position at 60% from top
+        topOffset: hasText ? coords.height * 0.6 : (coords.height - imageSize) / 2
+    };
+};
+
+const addLabelText = (doc: jsPDF, coords: ICoords, text: string[], layout: TextLayout): void => {
+    const { x, y, width } = coords;
+    doc.setFontSize(layout.fontSize);
+    
+    // Join the text array with newlines to preserve spacing
+    const textContent = text.join('\n');
+    doc.text(textContent, x, y, { 
+        maxWidth: width, 
+        align: 'left', 
+        baseline: 'top',
+        lineHeightFactor: layout.lineHeight 
+    });
+};
+
+const addLabelImages = (doc: jsPDF, coords: ICoords, images: string[], layout: ImageLayout): void => {
+    images.forEach((img, index) => {
+        try {
+            // For single image, center it
+            // For multiple images, space them evenly with equal gaps
+            const imageX = coords.x + layout.spacing + (index * (layout.width + layout.spacing));
+            const imageY = coords.y + layout.topOffset;
+            doc.addImage(img, 'PNG', imageX, imageY, layout.width, layout.width);
+        } catch (error) {
+            console.error(`Failed to add image at index ${index}:`, error);
+        }
+    });
+};
+
+const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILabelSpec, coords: ICoords): Promise<void> => {
     drawOuterBox(doc, coords);
 
     const margin = 4;
-    const usableWidth = coords.width - (2 * margin);
-    const usableHeight = coords.height - (2 * margin);
     const usableCoords: ICoords = {
         x: coords.x + margin,
         y: coords.y + margin,
-        width: usableWidth,
-        height: usableHeight,
-    }
+        width: coords.width - (2 * margin),
+        height: coords.height - (2 * margin)
+    };
 
+    // Prepare text content
     const text: string[] = [];
     if (labelSpec.date != null) {
-        text.push(formatDate(labelSpec.dateFormat, labelSpec.date))
-        text.push("");
+        text.push(formatDate(labelSpec.dateFormat, labelSpec.date));
     }
-    if (labelSpec.objective.length > 0) {
-        text.push(`${labelSpec.objective}`)
+    // Add objective text
+    if (labelSpec.objective && labelSpec.objective.length > 0) {
+        text.push(labelSpec.objective);
     }
-    addLabelText(doc, usableCoords, text);
 
     const hasText = text.length > 0;
 
-    if (labelSpec.images.length) {
-        const imageWidth = labelFormat.imageSize;
-        // We've got some images to add!
-        const bottomThird = usableHeight / 3;
-        const imageTop = hasText ? (2 * bottomThird) : bottomThird;
-        const topMargin = (bottomThird - imageWidth) / 2;
+    // Calculate layouts
+    const textLayout = calculateTextLayout(usableCoords.height, labelSpec.images.length > 0);
+    const imageLayout = labelSpec.images.length > 0 
+        ? calculateImageLayout(usableCoords, labelSpec.images.length, labelFormat.imageSize, hasText)
+        : null;
 
-        // const imageMargins = (usableWidth - (imageWidth * images.length)) / (images.length + 1);
-        const imageMargins = (usableWidth - (imageWidth * labelSpec.images.length)) / (labelSpec.images.length + 1);
-
-        labelSpec.images.forEach((img, index) => {
-            const imageX = usableCoords.x + (imageMargins * (index + 1)) + (imageWidth * index);
-            const imageY = usableCoords.y + imageTop + topMargin;
-
-            doc.addImage(img, 'PNG', imageX, imageY, imageWidth, imageWidth);
-        })
+    // Add content
+    if (hasText) {
+        addLabelText(doc, usableCoords, text, textLayout);
     }
-}
-
-
-const buildPdfNew = async (format: ILabelFormat, labelSpec: ILabelSpec) => {
-
-    const options: jsPDFOptions = {
-        format: 'a4',
-        orientation: 'p',
-        unit: 'mm',
+    if (imageLayout && labelSpec.images.length > 0) {
+        addLabelImages(doc, usableCoords, labelSpec.images, imageLayout);
     }
-    const doc = new jsPDF(options);
-    doc.setFontSize(format.fontSize);
+};
 
-    const { countX, countY } = format;
-    for (let x = 0; x < countX; x++) {
-        for (let y = 0; y < countY; y++) {
-            const { top, left, width, height } = getLabelDetails(format, x, y);
-            const coords: ICoords = {
-                x: left,
-                y: top,
-                width,
-                height
-            }
-            await buildLabel(doc, format, labelSpec, coords);
+export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IMultiLabelSpec): Promise<jsPDF> => {
+    try {
+        // Input validation
+        if (!format || !labelSpecs) {
+            throw new Error('Invalid input: format and labelSpecs are required');
         }
-    }
 
-    return doc.save(`${labelSpec.objective}.pdf`);
+        // Initialize PDF
+        const doc = new jsPDF({
+            format: 'a4',
+            orientation: 'p',
+            unit: 'mm',
+        });
 
-}
+        doc.setFontSize(format.fontSize);
 
-export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 10) => {
-    if (labelSpec.useNewLabelDesign) {
-        return buildPdfNew(format, labelSpec);
-    } else {
-        return buildPdfOld(format, labelSpec, imageWidth);
-    }
+        // Generate labels
+        const { countX, countY } = format;
+        const labelsPerPage = countX * countY;
 
-}
+        if ('specs' in labelSpecs) {
+            // Multi-label case
+            const totalLabels = labelSpecs.specs.filter(spec => spec !== null).length;
+            const totalPages = Math.ceil(totalLabels / labelsPerPage);
 
-const buildPdfOld = async (format: ILabelFormat, labelSpec: ILabelSpec, imageWidth: number = 8) => {
-    // Default export is a4 paper, portrait, using millimeters for units
-    // Label 24 per sheet = 63.5 x 33.9 mm
-    // A4 = 297mm * 210mm
+            for (let page = 0; page < totalPages; page++) {
+                // Add a new page for all pages except the first
+                if (page > 0) {
+                    doc.addPage();
+                }
 
-    // 12.9 top margin
-    // 12.9 bottom margin
+                // Calculate the start and end indices for this page
+                const startIdx = page * labelsPerPage;
+                const endIdx = Math.min((page + 1) * labelsPerPage, labelSpecs.specs.length);
 
-    // finger spaces
-    // letter formation
-    // full stop
-    // capital letter
+                // Get the specs for this page
+                const pageSpecs = labelSpecs.specs.slice(startIdx, endIdx);
 
-    //190.5 wide in labels
-    // 2 side margins
-    // 2 inner margins
-    const options: jsPDFOptions = {
-        format: 'a4',
-        orientation: 'p',
-        unit: 'mm',
-    }
-    const doc = new jsPDF(options);
-    doc.setFontSize(12);
-        //.setFont('ComicSansMS');
+                // Fill the page with labels
+                for (let y = 0; y < countY; y++) {
+                    for (let x = 0; x < countX; x++) {
+                        const position = y * countX + x;
+                        if (position >= pageSpecs.length) break;
 
-    const { width, height, horizontalPitch, verticalPitch, leftMargin, topMargin, countX, countY } = format;
-
-    const { date, images, objective, dateFormat } = labelSpec;
-
-    const margin = 3;
-
-    let textMaxWidth = width - (2 * margin);
-    if (images.length) {
-        textMaxWidth = textMaxWidth - imageWidth - margin;
-    }
-
-    for (let i = 0; i < countY; i++)
-    {
-        for (let j = 0; j < countX; j++)
-        {
-            const labelStartX = (horizontalPitch * j) + leftMargin;
-            const labelStartY = (verticalPitch * i) + topMargin;
-
-            if (window.DEBUG === 'true') {
-                // Draw Outer Rectangle
-                const stroke = 'S';
-                const rectRadius = 5;
-                // Slightly inset rounded rectangle
-                doc.roundedRect(labelStartX, labelStartY, width, height, rectRadius, rectRadius, stroke);
+                        const spec = pageSpecs[position];
+                        if (spec) {
+                            if (spec.images.length > 3) {
+                                throw new Error(`Maximum of 3 images allowed per label at position ${position + startIdx}`);
+                            }
+                            const { top, left, width, height } = getLabelDetails(format, x, y);
+                            const coords: ICoords = { x: left, y: top, width, height };
+                            await buildLabel(doc, format, spec, coords);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Single label case - use same spec for all positions
+            if (labelSpecs.images.length > 3) {
+                throw new Error('Maximum of 3 images allowed per label');
             }
 
-            const hasDate = date != null;
-
-            const dateTextToDisplay = hasDate ? formatDate(dateFormat, date!) : "";
-
-            const verticalOffset = dateFormat == 'long' ? 14 : 7;
-
-            doc.text(dateTextToDisplay, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top'});
-            doc.text(`${objective}`, labelStartX + margin, labelStartY + margin + verticalOffset, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
-            // doc.text(`Start X: ${labelStartX}, Start Y: ${labelStartY}`, labelStartX + margin, labelStartY + margin, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
-            // doc.text(`End X: ${labelStartX + width}, End Y: ${labelStartY + height}`, labelStartX + margin, labelStartY + margin + 14, { maxWidth: textMaxWidth, align: 'left', baseline: 'top' });
-
-            if (images.length)
-            {
-                // const imageCount = images.length;
-                // const imageTotalSpace = height - ((imageCount + 1) * margin);
-
-                const imageMargins = (height - (imageWidth * images.length)) / (images.length + 1);
-
-                const imageX = labelStartX + margin + textMaxWidth + margin;
-
-                images.forEach((img, index) => {
-                    const imageStartY = labelStartY + ((index + 1) * imageMargins) + (imageWidth * (index));
-
-                    doc.addImage(img, 'PNG', imageX, imageStartY, imageWidth, imageWidth);
-                });
+            for (let y = 0; y < countY; y++) {
+                for (let x = 0; x < countX; x++) {
+                    const { top, left, width, height } = getLabelDetails(format, x, y);
+                    const coords: ICoords = { x: left, y: top, width, height };
+                    await buildLabel(doc, format, labelSpecs, coords);
+                }
             }
-
-            // images?.forEach((image) => {
-            //     const imageX = (horizontalPitch * j) + textMaxWidth;
-            //     doc.addImage(image, 'PNG', imageX, labelStartY, imageOnLabel, imageOnLabel);
-            // });
-
         }
+
+        // Save PDF with a default name
+        doc.save('label-sheet.pdf');
+        return doc;
+    } catch (error) {
+        console.error('PDF generation failed:', error);
+        throw error;
     }
-
-    const shortFormatter = new Intl.DateTimeFormat('en-GB');
-    doc.save(`${shortFormatter.format(date)}_${objective}.pdf`);
-
-}
+};
