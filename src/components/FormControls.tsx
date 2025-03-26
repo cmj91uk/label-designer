@@ -107,22 +107,28 @@ export const Checkbox: React.FC<InputProps> = ({
   register,
   name,
   ...props
-}) => (
-  <div className="mb-4">
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        className={`h-4 w-4 text-fuchsia-400 focus:ring-fuchsia-400 border-gray-600 rounded 
-          ${error ? 'border-red-500' : ''} 
-          ${className}`}
-        {...(register ? register(name) : {})}
-        {...props}
-      />
-      <label className="ml-2 block text-sm text-gray-200">{label}</label>
+}) => {
+  // Generate a unique ID for the checkbox
+  const id = `checkbox-${name}`;
+  
+  return (
+    <div className="mb-4">
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={id}
+          className={`h-4 w-4 text-fuchsia-400 focus:ring-fuchsia-400 border-gray-600 rounded 
+            ${error ? 'border-red-500' : ''} 
+            ${className}`}
+          {...(register ? register(name) : {})}
+          {...props}
+        />
+        <label htmlFor={id} className="ml-2 block text-sm text-gray-200 cursor-pointer">{label}</label>
+      </div>
+      {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
     </div>
-    {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
-  </div>
-);
+  );
+};
 
 export const Radio: React.FC<InputProps> = ({
   label,
