@@ -5,7 +5,7 @@
  * Generator: Cursor AI
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-form';
 import { TextArea, Select, Checkbox } from './FormControls';
 import DatePicker from 'react-datepicker';
@@ -86,7 +86,7 @@ const LabelSpecForm: React.FC<{
   watch: any;
   remove: (index: number) => void;
   totalPositions: number;
-}> = ({ index, register, control, errors, watch, remove, totalPositions }) => {
+}> = ({ index, register, control, errors, watch, remove }) => {
   const useDate = watch(`labels.${index}.useDate`);
   const iconValues = watch(`labels.${index}.icons`);
   const selectedIconsCount = iconValues?.filter((icon: Icon) => icon.enabled).length || 0;
@@ -279,7 +279,7 @@ export const LessonForm: React.FC = () => {
   const previousLabelsPerSheetRef = React.useRef(labelsPerSheet);
   useEffect(() => {
     if (previousLabelsPerSheetRef.current !== labelsPerSheet) {
-      fields.forEach((field, index) => {
+      fields.forEach((_, index) => {
         setValue(`labels.${index}.quantity`, totalPositions);
       });
       previousLabelsPerSheetRef.current = labelsPerSheet;
@@ -391,7 +391,7 @@ export const LessonForm: React.FC = () => {
         {fields.length > 0 && (
           <div className="text-gray-300 text-sm">
             {(() => {
-              const totalLabels = fields.reduce((sum, field, index) => {
+              const totalLabels = fields.reduce((sum, _, index) => {
                 const quantity = watch(`labels.${index}.quantity`);
                 return sum + (quantity ? parseInt(quantity.toString(), 10) : 0);
               }, 0);
