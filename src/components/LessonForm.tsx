@@ -1,11 +1,11 @@
 /* AI-Generated Code Start
- * Generated on: 2024-03-16
- * Purpose: Lesson form component based on JSON schema
+ * Generated on: 2024-03-21
+ * Purpose: Multi-label form component
  * Generator: Cursor AI
  */
 
-import React from 'react';
-import { useForm, SubmitHandler, Controller } from 'react-hook-form';
+import React, { useState } from 'react';
+import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-form';
 import { TextArea, Select, Checkbox } from './FormControls';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -30,13 +30,18 @@ interface Icon {
   image: string;
 }
 
-interface LessonFormData {
+interface LabelSpec {
   lessonObjective: string;
   useDate: boolean;
   date?: string;
   dateFormat: 'long' | 'short';
-  labelsPerSheet: number;
   icons: Icon[];
+  positions: number[];
+}
+
+interface LessonFormData {
+  labelsPerSheet: number;
+  labels: LabelSpec[];
 }
 
 const LABELS_PER_SHEET_OPTIONS = [
@@ -71,76 +76,63 @@ const LABEL_FORMATS: { [key: string]: ILabelFormat } = {
   '65': SixtyFivePerSheet,
 };
 
-export const LessonForm: React.FC = () => {
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<LessonFormData>({
-    defaultValues: {
-      lessonObjective: '',
-      useDate: false,
-      date: '',
-      dateFormat: 'short',
-      labelsPerSheet: 8,
-      icons: AVAILABLE_ICONS,
-    }
-  });
-
-  const useDate = watch('useDate');
-  const iconValues = watch('icons');
-
-  const selectedIconsCount = iconValues?.filter(icon => icon.enabled).length || 0;
+const LabelSpecForm: React.FC<{
+  index: number;
+  register: any;
+  control: any;
+  errors: any;
+  watch: any;
+  remove: (index: number) => void;
+  totalPositions: number;
+}> = ({ index, register, control, errors, watch, remove, totalPositions }) => {
+  const useDate = watch(`labels.${index}.useDate`);
+  const iconValues = watch(`labels.${index}.icons`);
+  const selectedIconsCount = iconValues?.filter((icon: Icon) => icon.enabled).length || 0;
   const MAX_ICONS = 3;
 
-  const onSubmit: SubmitHandler<LessonFormData> = async (data) => {
-    const labelsPerSheet = parseInt(data.labelsPerSheet.toString(), 10);
-    const format = LABEL_FORMATS[labelsPerSheet];
-
-    if (!format) {
-      console.error('Invalid label format');
-      return;
-    }
-
-    const selectedIcons = data.icons
-      .filter(icon => icon.enabled)
-      .map(icon => icon.image);
-
-    const labelSpec: ILabelSpec = {
-      date: data.useDate ? new Date(data.date!) : undefined,
-      objective: data.lessonObjective,
-      images: selectedIcons,
-      dateFormat: data.dateFormat
-    };
-
-    try {
-      await buildPdf(format, labelSpec);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
-      <h2 className="text-2xl font-bold mb-6 text-gray-100">MSJ Label Builder</h2>
+    <div className="p-4 mb-4 border border-gray-700 rounded-lg">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-gray-100">Label {index + 1}</h3>
+        <button
+          type="button"
+          onClick={() => remove(index)}
+          className="text-red-400 hover:text-red-300"
+        >
+          Remove
+        </button>
+      </div>
 
       <TextArea
         label="Lesson Objective"
         register={register}
-        error={errors.lessonObjective?.message}
+        error={errors?.labels?.[index]?.lessonObjective?.message}
         placeholder="Enter the main objective of the lesson"
         rows={3}
         className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400 placeholder-gray-400"
-        {...register("lessonObjective")}
+        {...register(`labels.${index}.lessonObjective`)}
       />
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-200 mb-2">
+          Label Positions (1-{totalPositions})
+        </label>
+        <input
+          type="text"
+          placeholder="e.g., 1,2,3 or 1-5"
+          className="w-full px-3 py-2 border rounded-md shadow-sm bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
+          {...register(`labels.${index}.positions`)}
+        />
+        {errors?.labels?.[index]?.positions && (
+          <p className="mt-1 text-sm text-red-400">{errors.labels[index].positions.message}</p>
+        )}
+      </div>
 
       <Checkbox
         label="Include Date"
         register={register}
-        error={errors.useDate?.message}
-        {...register("useDate")}
+        error={errors?.labels?.[index]?.useDate?.message}
+        {...register(`labels.${index}.useDate`)}
       />
 
       {useDate && (
@@ -150,7 +142,7 @@ export const LessonForm: React.FC = () => {
           </label>
           <Controller
             control={control}
-            name="date"
+            name={`labels.${index}.date`}
             rules={{
               validate: (value) => {
                 if (useDate && !value) {
@@ -185,32 +177,17 @@ export const LessonForm: React.FC = () => {
             <Select
               label="Date Format"
               register={register}
-              error={errors.dateFormat?.message}
+              error={errors?.labels?.[index]?.dateFormat?.message}
               options={[
                 { value: 'short', label: 'Short (1/1/2024)' },
                 { value: 'long', label: 'Long (Monday 1st January 2024)' }
               ]}
               className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
-              {...register("dateFormat")}
+              {...register(`labels.${index}.dateFormat`)}
             />
           </div>
         </div>
       )}
-
-      <Select
-        label="Labels Per Sheet"
-        register={register}
-        error={errors.labelsPerSheet?.message}
-        options={LABELS_PER_SHEET_OPTIONS}
-        className="mb-4 bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
-        {...register("labelsPerSheet", {
-          required: "Labels per sheet is required",
-          validate: (value) => {
-            const numValue = parseInt(value.toString(), 10);
-            return [8, 14, 18, 21, 24, 65].includes(numValue) || "Invalid number of labels per sheet";
-          }
-        })}
-      />
 
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -219,13 +196,13 @@ export const LessonForm: React.FC = () => {
             {selectedIconsCount} of {MAX_ICONS} selected
           </span>
         </label>
-        {errors.icons && (
-          <p className="text-sm text-red-400 mb-2">{errors.icons.message}</p>
+        {errors?.labels?.[index]?.icons && (
+          <p className="text-sm text-red-400 mb-2">{errors.labels[index].icons.message}</p>
         )}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {AVAILABLE_ICONS.map((icon, index) => {
-            const inputId = `icon-${index}`;
-            const isSelected = iconValues?.[index]?.enabled;
+          {AVAILABLE_ICONS.map((icon, iconIndex) => {
+            const inputId = `icon-${index}-${iconIndex}`;
+            const isSelected = iconValues?.[iconIndex]?.enabled;
             const isDisabled = !isSelected && selectedIconsCount >= MAX_ICONS;
 
             return (
@@ -249,7 +226,7 @@ export const LessonForm: React.FC = () => {
                   id={inputId}
                   disabled={isDisabled}
                   className="sr-only"
-                  {...register(`icons.${index}.enabled`, {
+                  {...register(`labels.${index}.icons.${iconIndex}.enabled`, {
                     onChange: (e) => {
                       if (e.target.checked && selectedIconsCount >= MAX_ICONS) {
                         e.preventDefault();
@@ -264,13 +241,160 @@ export const LessonForm: React.FC = () => {
           })}
         </div>
       </div>
+    </div>
+  );
+};
 
-      <button
-        type="submit"
-        className="w-full bg-fuchsia-500 text-white py-2 px-4 rounded-md hover:bg-fuchsia-600 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors"
-      >
-        Submit
-      </button>
+export const LessonForm: React.FC = () => {
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<LessonFormData>({
+    defaultValues: {
+      labelsPerSheet: 8,
+      labels: [{
+        lessonObjective: '',
+        useDate: false,
+        date: '',
+        dateFormat: 'short',
+        icons: AVAILABLE_ICONS,
+        positions: []
+      }]
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "labels"
+  });
+
+  const labelsPerSheet = watch('labelsPerSheet');
+  const format = LABEL_FORMATS[labelsPerSheet];
+  const totalPositions = format ? format.countX * format.countY : 0;
+
+  const parsePositions = (posStr: string): number[] => {
+    if (!posStr) return [];
+    
+    const positions: number[] = [];
+    const parts = posStr.split(',').map(p => p.trim());
+    
+    for (const part of parts) {
+      if (part.includes('-')) {
+        const [start, end] = part.split('-').map(Number);
+        if (!isNaN(start) && !isNaN(end)) {
+          for (let i = start; i <= end; i++) {
+            if (i > 0 && i <= totalPositions && !positions.includes(i)) {
+              positions.push(i);
+            }
+          }
+        }
+      } else {
+        const num = Number(part);
+        if (!isNaN(num) && num > 0 && num <= totalPositions && !positions.includes(num)) {
+          positions.push(num);
+        }
+      }
+    }
+    
+    return positions.sort((a, b) => a - b);
+  };
+
+  const onSubmit: SubmitHandler<LessonFormData> = async (data) => {
+    const format = LABEL_FORMATS[data.labelsPerSheet];
+
+    if (!format) {
+      console.error('Invalid label format');
+      return;
+    }
+
+    // Convert form data to IMultiLabelSpec
+    const specs = new Array(totalPositions).fill(null);
+    
+    data.labels.forEach(label => {
+      const positions = parsePositions(label.positions.toString());
+      const selectedIcons = label.icons
+        .filter(icon => icon.enabled)
+        .map(icon => icon.image);
+
+      const spec: ILabelSpec = {
+        date: label.useDate ? new Date(label.date!) : undefined,
+        objective: label.lessonObjective,
+        images: selectedIcons,
+        dateFormat: label.dateFormat
+      };
+
+      positions.forEach(pos => {
+        specs[pos - 1] = spec;
+      });
+    });
+
+    try {
+      await buildPdf(format, { specs });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-2xl mx-auto p-6 bg-gray-800 rounded-lg shadow-xl border border-gray-700">
+      <h2 className="text-2xl font-bold mb-6 text-gray-100">MSJ Label Builder</h2>
+
+      <div className="mb-6">
+        <Select
+          label="Labels Per Sheet"
+          register={register}
+          error={errors.labelsPerSheet?.message}
+          options={LABELS_PER_SHEET_OPTIONS}
+          className="bg-gray-700 text-gray-100 border-gray-600 focus:border-fuchsia-400"
+          {...register("labelsPerSheet", {
+            required: "Labels per sheet is required",
+            validate: (value) => {
+              const numValue = parseInt(value.toString(), 10);
+              return [8, 14, 18, 21, 24, 65].includes(numValue) || "Invalid number of labels per sheet";
+            }
+          })}
+        />
+      </div>
+
+      {fields.map((field, index) => (
+        <LabelSpecForm
+          key={field.id}
+          index={index}
+          register={register}
+          control={control}
+          errors={errors}
+          watch={watch}
+          remove={remove}
+          totalPositions={totalPositions}
+        />
+      ))}
+
+      <div className="flex justify-between mt-4">
+        <button
+          type="button"
+          onClick={() => append({
+            lessonObjective: '',
+            useDate: false,
+            date: '',
+            dateFormat: 'short',
+            icons: AVAILABLE_ICONS,
+            positions: []
+          })}
+          className="px-4 py-2 bg-fuchsia-600 text-white rounded-md hover:bg-fuchsia-700"
+        >
+          Add Another Label
+        </button>
+
+        <button
+          type="submit"
+          className="px-4 py-2 bg-fuchsia-500 text-white rounded-md hover:bg-fuchsia-600"
+        >
+          Generate PDF
+        </button>
+      </div>
     </form>
   );
 };

@@ -30,6 +30,11 @@ interface ImageLayout {
     topOffset: number;
 }
 
+interface IMultiLabelSpec {
+    specs: (ILabelSpec | null)[];  // Array of specs, null means leave position empty
+    defaultSpec?: ILabelSpec;      // Optional default spec for unfilled positions
+}
+
 const isDebugMode = () => window.DEBUG === 'true';
 
 const drawOuterBox = (doc: jsPDF, coords: ICoords): void => {
@@ -141,15 +146,11 @@ const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILab
     }
 };
 
-export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec): Promise<jsPDF> => {
+export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IMultiLabelSpec): Promise<jsPDF> => {
     try {
         // Input validation
-        if (!format || !labelSpec) {
-            throw new Error('Invalid input: format and labelSpec are required');
-        }
-
-        if (labelSpec.images.length > 3) {
-            throw new Error('Maximum of 3 images allowed per label');
+        if (!format || !labelSpecs) {
+            throw new Error('Invalid input: format and labelSpecs are required');
         }
 
         // Initialize PDF
@@ -163,16 +164,52 @@ export const buildPdf = async (format: ILabelFormat, labelSpec: ILabelSpec): Pro
 
         // Generate labels
         const { countX, countY } = format;
-        for (let x = 0; x < countX; x++) {
+        const totalPositions = countX * countY;
+
+        // Handle both single spec and multi-spec cases
+        if ('specs' in labelSpecs) {
+            // Multi-label case
+            if (labelSpecs.specs.length > totalPositions) {
+                throw new Error(`Too many label specifications. Maximum allowed: ${totalPositions}`);
+            }
+
             for (let y = 0; y < countY; y++) {
-                const { top, left, width, height } = getLabelDetails(format, x, y);
-                const coords: ICoords = { x: left, y: top, width, height };
-                await buildLabel(doc, format, labelSpec, coords);
+                for (let x = 0; x < countX; x++) {
+                    const position = y * countX + x;
+                    const spec = position < labelSpecs.specs.length 
+                        ? labelSpecs.specs[position] 
+                        : labelSpecs.defaultSpec || null;
+
+                    if (spec) {
+                        if (spec.images.length > 3) {
+                            throw new Error(`Maximum of 3 images allowed per label at position ${position}`);
+                        }
+                        const { top, left, width, height } = getLabelDetails(format, x, y);
+                        const coords: ICoords = { x: left, y: top, width, height };
+                        await buildLabel(doc, format, spec, coords);
+                    }
+                }
+            }
+        } else {
+            // Single label case - use same spec for all positions
+            if (labelSpecs.images.length > 3) {
+                throw new Error('Maximum of 3 images allowed per label');
+            }
+
+            for (let y = 0; y < countY; y++) {
+                for (let x = 0; x < countX; x++) {
+                    const { top, left, width, height } = getLabelDetails(format, x, y);
+                    const coords: ICoords = { x: left, y: top, width, height };
+                    await buildLabel(doc, format, labelSpecs, coords);
+                }
             }
         }
 
-        // Save PDF
-        doc.save(`${labelSpec.objective}.pdf`);
+        // Save PDF with a default name if no objective is specified
+        const fileName = ('specs' in labelSpecs) 
+            ? 'multi-label-sheet.pdf'
+            : `${labelSpecs.objective || 'label-sheet'}.pdf`;
+        doc.save(fileName);
         return doc;
     } catch (error) {
         console.error('PDF generation failed:', error);
