@@ -109,7 +109,6 @@ export const LessonForm: React.FC = () => {
       .map(icon => icon.image);
 
     const labelSpec: ILabelSpec = {
-      useNewLabelDesign: true,
       date: data.useDate ? new Date(data.date!) : undefined,
       objective: data.lessonObjective,
       images: selectedIcons,
