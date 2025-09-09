@@ -146,7 +146,7 @@ const buildLabel = async (doc: jsPDF, labelFormat: ILabelFormat, labelSpec: ILab
     }
 };
 
-export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IMultiLabelSpec): Promise<jsPDF> => {
+export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IMultiLabelSpec, fontColor: string): Promise<jsPDF> => {
     try {
         // Input validation
         if (!format || !labelSpecs) {
@@ -161,6 +161,7 @@ export const buildPdf = async (format: ILabelFormat, labelSpecs: ILabelSpec | IM
         });
 
         doc.setFontSize(format.fontSize);
+        doc.setTextColor(fontColor || '#000000');
 
         // Generate labels
         const { countX, countY } = format;

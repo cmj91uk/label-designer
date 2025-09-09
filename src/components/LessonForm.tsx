@@ -5,10 +5,11 @@
  * Generator: Cursor AI
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-form';
 import { TextArea, Select, Checkbox } from './FormControls';
 import DatePicker from 'react-datepicker';
+import { Circle } from '@uiw/react-color'
 import "react-datepicker/dist/react-datepicker.css";
 import { buildPdf } from '../pdf-builder';
 import { ILabelSpec } from '../label-spec';
@@ -44,6 +45,7 @@ interface LabelSpec {
 interface LessonFormData {
   labelsPerSheet: number;
   labels: LabelSpec[];
+  color: string;
 }
 
 const LABELS_PER_SHEET_OPTIONS = [
@@ -90,6 +92,8 @@ const LabelSpecForm: React.FC<{
   const useDate = watch(`labels.${index}.useDate`);
   const iconValues = watch(`labels.${index}.icons`);
   const selectedIconsCount = iconValues?.filter((icon: Icon) => icon.enabled).length || 0;
+
+  const [color, setColor] = useState<string>('#000000');
 
   return (
     <div className="mb-8 p-6 bg-gray-800 rounded-lg relative">
@@ -187,6 +191,26 @@ const LabelSpecForm: React.FC<{
           </div>
         </div>
       )}
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-200 mb-2">
+          Label Colour
+        </label>
+        <div style={{ borderColor: color }} className={`px-3 py-2 border border-4 bg-gray-300 rounded-md`}>
+          <Controller name='color' control={control} defaultValue={color} render={({ field: { onChange, value } }) => (
+            <Circle colors={[
+              '#000000',
+              '#F44336',
+              '#4CAF50',
+              '#3F51B5',
+              '#FF9800',
+              '#9C27B0',
+              '#03A9F4'
+            ]} color={value} onChange={(c) => { setColor(c.hex); return onChange(c.hex); }} />
+          )}>
+          </Controller>
+        </div>
+      </div>
 
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-200 mb-2">
@@ -305,18 +329,19 @@ export const LessonForm: React.FC = () => {
       return;
     }
 
+
     const labelsPerPage = format.countX * format.countY;
-    
+
     try {
       // Calculate total labels needed
       const totalLabels = data.labels.reduce((sum, label) => sum + label.quantity, 0);
       const totalPages = Math.ceil(totalLabels / labelsPerPage);
       const totalSpecs = totalPages * labelsPerPage;
-      
+
       // Create specs array large enough for all pages
       const specs = new Array(totalSpecs).fill(null);
       let currentPosition = 0;
-      
+
       // Fill the specs array with labels
       for (const label of data.labels) {
         const selectedIcons = label.icons
@@ -327,7 +352,7 @@ export const LessonForm: React.FC = () => {
           date: label.useDate ? new Date(label.date!) : undefined,
           objective: label.lessonObjective,
           images: selectedIcons,
-          dateFormat: label.dateFormat
+          dateFormat: label.dateFormat,
         };
 
         // Add this label's quantity to the specs array
@@ -339,7 +364,7 @@ export const LessonForm: React.FC = () => {
 
       // Generate the PDF with all labels
       const multiPageSpec: IMultiLabelSpec = { specs };
-      await buildPdf(format, multiPageSpec);
+      await buildPdf(format, multiPageSpec, data.color);
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
